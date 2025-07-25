@@ -6,7 +6,7 @@
 
 &nbsp;  ```bash
 
-&nbsp;  git clone https://github.com/TON\_UTILISATEUR/optIRSAM.git
+&nbsp;  git clone https://github.com/nathanvanneste/optIRSAM.git
 
 &nbsp;  cd optIRSAM
 
