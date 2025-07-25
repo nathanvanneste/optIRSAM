@@ -1,0 +1,14 @@
+#Virtual Environnement
+venv/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+# SQLite
+db.sqlite3
+# Logs
+*.log
+# IDE
+.vscode/
+.idea/
