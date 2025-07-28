@@ -8,7 +8,7 @@ class Adresse(models.Model):
     longitude = models.FloatField(null=True, blank=True)
 
     def __str__(self):
-        return f"Numéro de voie et libellé: {self.num_et_rue}; Ville: {self.ville}; Code Postal: {self.code_postal}; Latitude: {self.latitude}; Longitude: {self.longitude}"
+        return f"{self.num_et_rue}, {self.code_postal}, {self.ville} - {self.latitude} - {self.longitude}"
     
     class Meta:
         ordering = ['ville', 'code_postal']
@@ -16,10 +16,10 @@ class Adresse(models.Model):
 class Etablissement(models.Model):
     nom = models.CharField(max_length = 50)
     code = models.CharField(max_length = 10)
-    adresse = models.ForeignKey(Adresse, on_delete = models.SET_NULL, related_name= 'etablissements')
+    adresse = models.ForeignKey(Adresse, on_delete = models.SET_NULL, null = True, blank = True, related_name= 'etablissements')
 
     def __str__(self):
-        return f"Nom de l'établissement: {self.nom}; Code de l'établissement: {self.code}; Adresse: ({self.adresse})"
+        return f"{self.nom} - {self.code} - ({self.adresse})"
     
     class Meta:
         ordering = ['nom']
@@ -28,11 +28,11 @@ class Etablissement(models.Model):
 class Enfant(models.Model):
     prenom = models.CharField(max_length = 50)
     nom = models.CharField(max_length = 50)
-    adresse = models.ForeignKey(Adresse, on_delete = models.SET_NULL, related_name = 'enfants')
+    adresse = models.ForeignKey(Adresse, on_delete = models.SET_NULL, null = True, blank = True, related_name = 'enfants')
     etablissement = models.ForeignKey(Etablissement, on_delete = models.CASCADE, related_name = 'enfants')
 
     def __str__(self):
-        return f"Prénom: {self.prenom}; Nom: {self.nom}; Adresse: ({self.adresse}); Etablissement: ({self.etablissement})"
+        return f"{self.prenom} - {self.nom} - ({self.adresse}) - ({self.etablissement})"
 
     class Meta:
         ordering = ['nom', 'prenom']
@@ -42,7 +42,7 @@ class Groupe(models.Model):
     enfants = models.ManyToManyField(Enfant, related_name = 'groupes')
 
     def __str__(self):
-        return f"Nom du groupe: {self.nom}"
+        return f"{self.nom}"
     
     class Meta:
         ordering = ['nom']

@@ -1,0 +1,11 @@
+{% extends 'user/base.html' %}
+{% block title %}Supprimer Enfant{% endblock %}
+{% block content %}
+  <h1>Supprimer l’enfant ?</h1>
+  <p>Êtes‑vous sûr(e) de vouloir supprimer : <strong>{{ object }}</strong> ?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Oui, supprimer</button>
+    <a href="{% url 'enfant_list' %}">Annuler</a>
+  </form>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'user/base.html' %}
+{% block title %}Formulaire Enfant{% endblock %}
+{% block content %}
+  <h1>{% if object %}Modifier{% else %}Créer{% endif %} un enfant</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Enregistrer</button>
+  </form>
+  <a href="{% url 'enfant_list' %}">← Retour à la liste</a>
+{% endblock %}
