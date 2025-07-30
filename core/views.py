@@ -1,3 +1,7 @@
 from django.shortcuts import render
 
-# Create your views here.
+def lancement(request):
+    return render(request, "core/lancement.html")
+
+def accueil(request):
+    return render(request, "core/accueil.html")
