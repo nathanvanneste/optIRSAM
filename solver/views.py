@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def parametrage(request):
+    return render(request, 'solver/parametrage.html')

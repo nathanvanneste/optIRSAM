@@ -4,6 +4,9 @@ from django.views.generic import (ListView, CreateView, UpdateView, DeleteView)
 from .models import Enfant, Groupe
 from .forms import EnfantForm, GroupeForm
 
+def donnees_list(request):
+    return render(request, 'user/donnees_list.html')
+
 class EnfantList(ListView):
     model = Enfant
     paginate_by = 20

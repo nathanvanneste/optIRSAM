@@ -3,9 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Accueil</title>
+    <!-- Icône de l'onglet -->
+    <link rel="shortcut icon" href="/static/images/logo_picto.png" />
   </head>
   <body>
-    <div>Voici la page d'accueil</div>
+    <div>
+      <!-- logo de l'asso en coin -->
+      <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
+    </div>
+    <div>
+      <h1>Que voulez-vous faire ?</h1>
+      <!-- bouton d'accès aux données -->
+      <button onclick="window.location.href = '/users'">
+        Accéder aux données
+      </button>
+      <p>
+        Accéder aux données et modifier ces dernières. Vous pouver ajouter des
+        usagers et des établissements, mais surtout créer des groupes,
+        indispensables pour lancer une résolution !
+      </p>
+      <!-- bouton d'accès à la résolution -->
+      <button onclick="window.location.href = '/solver'">
+        Lancer une résolution
+      </button>
+      <p>
+        Une fois les données chargées, déterminer les paramêtres de résolution
+        et afficher le résultat.
+      </p>
+    </div>
   </body>
 </html>

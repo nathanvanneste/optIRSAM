@@ -3,7 +3,7 @@ from . import views
 from .views import *
 
 urlpatterns = [
-    path('', EnfantList.as_view(), name = 'enfant_list'),
+    path('', views.donnees_list),
     path('add/', EnfantCreate.as_view(), name = 'enfant_add'),
     path('<int:pk>/edit/', EnfantUpdate.as_view(), name = 'enfant_edit'),
     path('<int:pk>/delete', EnfantDelete.as_view(), name = 'enfant_delete'),
