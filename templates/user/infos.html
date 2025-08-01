@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paramétrage de la résolution</title>
+    <!-- Icône de l'onglet -->
+    <link rel="shortcut icon" href="/static/images/logo_picto.png" />
+  </head>
+  <body>
+    <div>
+      <!-- logo de l'asso en coin -->
+      <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
+    </div>
+    <div><h1>Ici les infos</h1></div>
+    <div>
+      {% if type == "enfant" %}
+      <ul>
+        <li>Nom : {{ objet.nom }}</li>
+        <li>Prénom : {{ objet.prenom }}</li>
+        <li>Adresse : {{ objet.adresse }}</li>
+      </ul>
+
+      {% elif type == "etablissement" %}
+      <ul>
+        <li>Nom : {{ objet.nom }}</li>
+        <li>Code : {{ objet.code }}</li>
+        <li>Adresse : {{ objet.adresse }}</li>
+      </ul>
+
+      {% elif type == "groupe" %}
+      <ul>
+        <li>Nom : {{ objet.nom }}</li>
+      </ul>
+
+      {% else %}
+      <p>Type d'objet non pris en charge.</p>
+      {% endif %}
+    </div>
+    <div>
+      <!-- Bouton de retour à l'accueil -->
+      <button onclick="window.location.href = '/accueil'">
+        <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
+      </button>
+    </div>
+  </body>
+</html>

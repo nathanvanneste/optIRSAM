@@ -21,5 +21,53 @@
         <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
       </button>
     </div>
+    <div>
+      <!-- Affichage des données -->
+      <a href="{% url 'add_enfant' %}">
+        <button type="button">+ d'infos</button>
+      </a>
+      <div>
+        <!-- Affichage des usagers -->
+        <h2>Usagers</h2>
+        <ul>
+          {% for enfant in enfants %}
+          <li>
+            {{enfant}}
+            <a href="{% url 'infos' 'enfant' enfant.id %}">
+              <button type="button">+ d'infos</button>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <!-- Affichage des groupes -->
+        <h2>Groupes</h2>
+        <ul>
+          {% for groupe in groupes %}
+          <li>
+            {{groupe}}
+            <a href="{% url 'infos' 'groupe' groupe.id %}">
+              <button type="button">+ d'infos</button>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <!-- Affichage des établissements -->
+        <h2>Etablissements</h2>
+        <ul>
+          {% for etablissement in etablissements %}
+          <li>
+            {{etablissement}}
+            <a href="{% url 'infos' 'etablissement' etablissement.id %}">
+              <button type="button">+ d'infos</button>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
   </body>
 </html>

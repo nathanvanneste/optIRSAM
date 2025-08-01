@@ -1,50 +1,44 @@
-from django.shortcuts import render
-from django.urls import reverse_lazy
-from django.views.generic import (ListView, CreateView, UpdateView, DeleteView)
-from .models import Enfant, Groupe
-from .forms import EnfantForm, GroupeForm
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Enfant, Groupe, Adresse, Etablissement
+from .forms import EnfantForm, AdresseForm
+
+MODELE_PAR_TYPE = {
+    'enfant' : Enfant,
+    'etablissement' : Etablissement,
+    'groupe' : Groupe,
+}
 
 def donnees_list(request):
-    return render(request, 'user/donnees_list.html')
+    context = {"enfants" : Enfant.objects.all(), "groupes" : Groupe.objects.all(), "etablissements" : Etablissement.objects.all()}
+    return render(request, 'user/donnees_list.html', context)
 
-class EnfantList(ListView):
-    model = Enfant
-    paginate_by = 20
-    template_name = 'user/enfant_list.html'
+def infos(request, objet_type, objet_id):
+    modele = MODELE_PAR_TYPE.get(objet_type.lower())
+    objet = get_object_or_404(modele, id=objet_id)
+    context = {"objet" : objet, "type" : objet_type.lower()}
+    return render(request, "user/infos.html", context)
 
-class EnfantCreate(CreateView):
-    model = Enfant
-    form_class = EnfantForm
-    success_url = reverse_lazy('enfant_list')
-    template_name = 'user/enfant_form.html'
 
-class EnfantUpdate(UpdateView):
-    model = Enfant
-    form_class  = EnfantForm
-    success_url = reverse_lazy('enfant_list')
-    template_name = 'user/enfant_form.html'
+def enfant_add(request):
+    if request.method == 'POST':
+        enfant_form = EnfantForm(request.POST)
+        adresse_form = AdresseForm(request.POST)
 
-class EnfantDelete(DeleteView):
-    model = Enfant
-    success_url = reverse_lazy('enfant_list')
-    template_name = 'user/enfant_delete.html'
+        if enfant_form.is_valid() and adresse_form.is_valid():
+            # Crée d'abord l'adresse
+            adresse = adresse_form.save()
 
-class GroupeList(ListView):
-    model = Groupe
-    template_name = 'user/groupe_list.html'
+            # Crée l’enfant en associant l’adresse
+            enfant = enfant_form.save(commit=False)
+            enfant.adresse = adresse
+            enfant.save()
 
-class GroupeCreate(CreateView):
-    model = Groupe
-    form_class = GroupeForm
-    success_url = reverse_lazy('groupe_list')
-    template_name = 'user/groupe_list.html'
+            return redirect("donnees_list")
+    else:
+        enfant_form = EnfantForm()
+        adresse_form = AdresseForm()
 
-class GroupeUpdate(UpdateView):
-    model = Groupe
-    success_url = reverse_lazy('groupe_list')
-    template_name = 'user/groupe_list.html'
-
-class GroupeDelete(DeleteView):
-    model = Groupe
-    success_url = reverse_lazy('groupe_list')
-    template_name = 'user/groupe_confirm_delete.html'
+    return render(request, "user/enfant_add.html", {
+        "form": enfant_form,
+        "adresse_form": adresse_form,
+    })

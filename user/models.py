@@ -8,7 +8,7 @@ class Adresse(models.Model):
     longitude = models.FloatField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.num_et_rue}, {self.code_postal}, {self.ville} - {self.latitude} - {self.longitude}"
+        return f"{self.num_et_rue}, {self.ville}"
     
     class Meta:
         ordering = ['ville', 'code_postal']
@@ -19,7 +19,7 @@ class Etablissement(models.Model):
     adresse = models.ForeignKey(Adresse, on_delete = models.SET_NULL, null = True, blank = True, related_name= 'etablissements')
 
     def __str__(self):
-        return f"{self.nom} - {self.code} - ({self.adresse})"
+        return f"{self.nom}"
     
     class Meta:
         ordering = ['nom']
@@ -32,7 +32,7 @@ class Enfant(models.Model):
     etablissement = models.ForeignKey(Etablissement, on_delete = models.CASCADE, related_name = 'enfants')
 
     def __str__(self):
-        return f"{self.prenom} - {self.nom} - ({self.adresse}) - ({self.etablissement})"
+        return f"{self.nom}, {self.prenom}"
 
     class Meta:
         ordering = ['nom', 'prenom']
