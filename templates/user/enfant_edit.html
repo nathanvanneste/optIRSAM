@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ajout d'un nouvel enfant</title>
+    <title>Modifier un enfant</title>
     <!-- Icône de l'onglet -->
     <link rel="shortcut icon" href="/static/images/logo_picto.png" />
   </head>
@@ -14,10 +14,10 @@
     </div>
     <div>
       <!-- Création du formulaire -->
-      <h1>Ajout d'un nouvel enfant</h1>
+      <h1>Modifier l'enfant</h1>
       <form method="post">
         {% csrf_token %} {{ form.as_p }}{{adresse_form.as_p}}
-        <input type="submit" value="Ajouter" />
+        <input type="submit" value="Modifier" />
       </form>
     </div>
     <div>

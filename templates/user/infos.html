@@ -31,6 +31,9 @@
       {% elif type == "groupe" %}
       <ul>
         <li>Nom : {{ objet.nom }}</li>
+        {% for enfant in objet.enfants.all %}
+        <li>{{ enfant }}</li>
+        {% endfor %}
       </ul>
 
       {% else %}
@@ -42,6 +45,7 @@
       <button onclick="window.location.href = '/accueil'">
         <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
       </button>
+      <button onclick="window.location.href = '/users'">&#8592;</button>
     </div>
   </body>
 </html>
