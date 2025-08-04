@@ -22,6 +22,13 @@
       </button>
     </div>
     <div>
+      <h2>Filtres sur les usagers</h2>
+      <form method="get">
+        {{ filtre.form.as_p }}
+        <input type="submit" value="Filtrer" />
+      </form>
+    </div>
+    <div>
       <!-- Affichage des données -->
       <div>
         <!-- Affichage des usagers -->
@@ -39,7 +46,10 @@
               <button type="button">modifier</button>
             </a>
             <!-- Bouton de suppression de l'enfant -->
-            <a href="{% url 'remove_enfant' enfant.id %}">
+            <a
+              href="{% url 'remove_enfant' enfant.id %}"
+              onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ enfant.prenom }} {{ enfant.nom }} ?');"
+            >
               <button type="button">supprimer</button>
             </a>
           </li>
@@ -66,7 +76,10 @@
               <button type="button">modifier</button>
             </a>
             <!-- Bouton de suppression du groupe -->
-            <a href="{% url 'remove_groupe' groupe.id %}">
+            <a
+              href="{% url 'remove_groupe' groupe.id %}"
+              onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ groupe.nom }} ?');"
+            >
               <button type="button">supprimer</button>
             </a>
           </li>

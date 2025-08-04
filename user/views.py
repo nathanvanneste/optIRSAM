@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Enfant, Groupe, Adresse, Etablissement
 from .forms import EnfantForm, AdresseForm, GroupeForm
+from .filters import EnfantFilter
 
 MODELE_PAR_TYPE = {
     'enfant' : Enfant,
@@ -9,7 +10,10 @@ MODELE_PAR_TYPE = {
 }
 
 def donnees_list(request):
-    context = {"enfants" : Enfant.objects.all(), "groupes" : Groupe.objects.all(), "etablissements" : Etablissement.objects.all()}
+    filtre_enfant = EnfantFilter(request.GET, queryset=Enfant.objects.all())
+    enfants_filtres = filtre_enfant.qs
+
+    context = {"filtre" : filtre_enfant, "enfants" : enfants_filtres, "groupes" : Groupe.objects.all(), "etablissements" : Etablissement.objects.all()}
     return render(request, 'user/donnees_list.html', context)
 
 def infos(request, objet_type, objet_id):

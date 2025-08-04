@@ -1,32 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ajout d'un nouvel enfant</title>
-    <!-- Icône de l'onglet -->
     <link rel="shortcut icon" href="/static/images/logo_picto.png" />
   </head>
   <body>
-    <div>
-      <!-- logo de l'asso en coin -->
-      <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
-    </div>
-    <div>
-      <!-- Création du formulaire -->
-      <h1>Ajout d'un nouvel enfant</h1>
-      <form method="post">
-        {% csrf_token %} {{ form.as_p }}{{adresse_form.as_p}}
-        <input type="submit" value="Ajouter" />
-      </form>
-    </div>
-    <div>
-      <!-- Bouton de retour à l'accueil -->
-      <button onclick="window.location.href = '/accueil'">
-        <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
+    <h1>Ajout d'un nouvel enfant</h1>
+
+    <form method="post">
+      {% csrf_token %} {{ form.as_p }} {{ adresse_form.as_p }}
+
+      <button type="button" onclick="geocoderAdresse()">
+        Trouver coordonnées
       </button>
-      <!-- Bouton de retour en arrière -->
-      <button onclick="window.location.href = '/users'">&#8592;</button>
-    </div>
+
+      <input type="submit" value="Ajouter" />
+    </form>
+
+    <button onclick="window.location.href = '/accueil'">
+      <img src="/static/images/logo_accueil.png" alt="Retour accueil" />
+    </button>
+
+    <button onclick="window.location.href = '/users'">&#8592;</button>
+
+    <script>
+      function geocoderAdresse() {
+        const rue = document.getElementById("id_num_et_rue").value;
+        const ville = document.getElementById("id_ville").value;
+        const code = document.getElementById("id_code_postal").value;
+
+        if (!rue || !ville || !code) {
+          alert(
+            "Merci de remplir les champs adresse, ville et code postal avant de chercher les coordonnées."
+          );
+          return;
+        }
+
+        const adresse = encodeURIComponent(`${rue}, ${code} ${ville}, France`);
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${adresse}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data && data.length > 0) {
+              document.getElementById("id_latitude").value = data[0].lat;
+              document.getElementById("id_longitude").value = data[0].lon;
+            } else {
+              alert("Coordonnées non trouvées. Vérifie l'adresse.");
+            }
+          })
+          .catch((error) => {
+            console.error("Erreur lors de la requête Nominatim :", error);
+            alert("Une erreur est survenue lors de la recherche.");
+          });
+      }
+    </script>
   </body>
 </html>
