@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect
+import json
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Run
 from .forms import RunForm
-
-def parametrage(request):
-    return render(request, 'solver/parametrage.html')
+from .services import *
 
 def run_create(request):
     if request.method == 'POST':
@@ -11,10 +11,18 @@ def run_create(request):
             run = form.save(commit = False)
             run.status = 'RUNNING'
             run.save()
-            # 1) Prendre les enfants du groupe, construire les données
-            # 2) Appeler OrTools ici ou déclencher un task Celery
-            # 3)Mettre à jour run.result_json et run.status
+            nb_enfants = run.groupe.enfants.count()
+            capacite_taxi = run.capacity
+            capacities = [capacite_taxi]*nb_enfants
+            result_python = solve_vrp(run.groupe, run.etablissement, capacities, run.time_limit, run.calculation_mod, run.mode)
+            run.status = result_python["status"]
+            run.result_json = json.dumps(result_python, indent = 2, ensure_ascii = False)
+            run.save()
             return redirect('run_detail', pk = run.pk)
     else:
         form = RunForm()
-    return render(request, 'solver/run_form.html',{'form' : form})
+    return render(request, 'solver/parametrage.html',{'form' : form})
+
+def run_detail(request, pk):
+    run = get_object_or_404(Run, pk = pk)
+    return render(request, "solver/run_detail.html", {'run' : run})

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Paramètrage d'une résolution</title>
+    <title>Résultats d'une résolution</title>
     <!-- Icône de l'onglet -->
     <link rel="shortcut icon" href="/static/images/logo_picto.png" />
   </head>
@@ -13,17 +13,18 @@
       <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
     </div>
     <div>
-      <!-- Création du formulaire -->
-      <h1>lLancement d'une résolution</h1>
-      <form method="post">
-        {% csrf_token %} {{ form.as_p }}
-        <input type="submit" value="Lancer la résolution" />
-      </form>
+      <!-- Détail de la solution -->
+      <h1>Détail de la Run</h1>
+      <p>Status : {{ run.status }}</p>
+      <p>Capacité : {{ run.capacity }}</p>
+      <p>Date de création : {{ run.created_at }}</p>
+      <p>Résultat brut : {{ run.result_json }}</p>
     </div>
     <div>
       <!-- Bouton de retour à l'accueil -->
       <button onclick="window.location.href = '/accueil'">
         <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
+      </button>
     </div>
   </body>
 </html>

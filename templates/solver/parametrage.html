@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Paramétrage de la résolution</title>
+    <title>Paramètrage d'une résolution</title>
     <!-- Icône de l'onglet -->
     <link rel="shortcut icon" href="/static/images/logo_picto.png" />
   </head>
@@ -12,7 +12,14 @@
       <!-- logo de l'asso en coin -->
       <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
     </div>
-    <div><h1>Paramètres de résolution</h1></div>
+    <div>
+      <!-- Création du formulaire -->
+      <h1>lLancement d'une résolution</h1>
+      <form method="post">
+        {% csrf_token %} {{ form.as_p }}
+        <input type="submit" value="Lancer la résolution" />
+      </form>
+    </div>
     <div>
       <!-- Bouton de retour à l'accueil -->
       <button onclick="window.location.href = '/accueil'">
