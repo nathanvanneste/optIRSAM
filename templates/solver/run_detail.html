@@ -21,6 +21,10 @@
       <p>Résultat brut : {{ run.result_json }}</p>
     </div>
     <div>
+      <h2>Carte :</h2>
+      {{ map|safe }}
+    </div>
+    <div>
       <!-- Bouton de retour à l'accueil -->
       <button onclick="window.location.href = '/accueil'">
         <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />

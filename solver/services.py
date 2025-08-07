@@ -4,22 +4,27 @@ import requests
 
 def get_matrices(coords, annotations=("distance","duration")):
     """
-    Interroge OSRM pour obtenir les matrices distance & durée.
-    Retourne (distMat, durMat) ou lève une exception.
+    Interroge OSRM pour obtenir les matrices des distances & durées.
+    Retourne le tuple (distMat, durMat) ou lève une exception.
     """
-    base = "https://router.project-osrm.org/table/v1/driving/"
-    url  = base + coords
-    resp = requests.get(url, params={"annotations": ",".join(annotations)})
-    resp.raise_for_status()
-    data = resp.json()
+    # Communication avec l'API
+    base = "https://router.project-osrm.org/table/v1/driving/" # URL initial sans paramètre
+    url  = base + coords # URL final avec ajout des paramètres
+    resp = requests.get(url, params={"annotations": ",".join(annotations)}) # Appel à OSRM
+    resp.raise_for_status() # Résultat de l'appel
+    data = resp.json() # Récuperation du resultat
+
+    # Levée d'exception
     if "distances" not in data or "durations" not in data:
         raise ValueError("OSRM n'a pas renvoyé les matrices attendues.")
+    
+    # Création des matrices de distances et de durées renvoyées comme résultat
     distMat = [[int(d) for d in row] for row in data["distances"]]
     durMat  = [[int(d) for d in row] for row in data["durations"]]
     return distMat, durMat
 
 def format_solution(manager, routing, solution, distMat, durMat, group,
-                    virtual_start=False, virtual_end=False):
+                    virtual_start, virtual_end):
     """
     Retourne un dict sérialisable incluant pour chaque nœud:
       - vehicle_id
@@ -28,64 +33,75 @@ def format_solution(manager, routing, solution, distMat, durMat, group,
 
     Si virtual_start/end est True, les nœuds virtuels sont ignorés dans l'affichage.
     """
+    # Pour débuger
+    print("STARTS:", [manager.IndexToNode(routing.Start(vid)) for vid in range(routing.vehicles())])
+    print("ENDS:", [manager.IndexToNode(routing.End(vid)) for vid in range(routing.vehicles())])
+    print("Virtual start:", virtual_start, "Virtual end:", virtual_end)
     routes = []
     enfants = list(group.enfants.all())
 
-    for vid in range(routing.vehicles()):
-        index = routing.Start(vid)
-        seq, dist, dur = [], 0, 0
-        route_started = False
+    # Index du vrai établissement (dépend de la présence du dépôt virtuel)
+    depot_node = 0 if not(virtual_start or virtual_end) else 1
 
-        while not routing.IsEnd(index):
-            node = manager.IndexToNode(index)
+    for vid in range(routing.vehicles()): # On boucle pour chaque véhicule
+        index = routing.Start(vid) # Donne l'indice OR-Tools du point de départ du véhicule vid
+        seq, dist, dur = [], 0, 0 # seq = séquence de noeuds visités | dist = distance totale de la tournée | dur = durée totale de la tournée
 
+        while not routing.IsEnd(index): # On regarde si on est au dernier noeud de la tournée
+            node = manager.IndexToNode(index) # conversion de l'index OR-Tools en indice réel
+
+            # On regarde si le noeud sur lequel nous sommes est un noeud virtuel
             is_virtual_start = virtual_start and node == 0
-            is_virtual_end   = virtual_end and node == len(distMat) - 1
 
-            # Ignorer le dépôt virtuel en début
-            if not is_virtual_start and not is_virtual_end:
-                route_started = True
-                if node == 0:
-                    seq.append("Dépôt")
+            if not is_virtual_start:
+                if node == depot_node:
+                    seq.append("Établissement")
                 else:
-                    child = enfants[node - 1] if not virtual_start else enfants[node - 1]
-                    seq.append(f"{child.prenom} {child.nom}")
+                    if virtual_start:
+                        enfant_index = node - 2
+                    else:
+                        enfant_index = node - 1 # L'ordre se réfère aux ajouts dans coord_list, ainsi il s'agit de regarder par rapport à ça pour connaitre l'index des enfants
+                    if 0 <= enfant_index < len(enfants): # Mesure de sécurité, évite un index out of range si erreur d'offset ou de calcul
+                        child = enfants[enfant_index]
+                        seq.append(f"{child.prenom} {child.nom}")
+                    else:
+                        seq.append(f"[Nœud {node}]")  # Sécurité
 
-            # Calculer le coût même sur arc virtuel (ou pas, à toi de décider)
-            nxt = solution.Value(routing.NextVar(index))
-            nnode = manager.IndexToNode(nxt)
-
-            if not is_virtual_end:
-                dist += distMat[node][nnode]
-                dur  += durMat[node][nnode]
+            nxt = solution.Value(routing.NextVar(index)) # On passe au noeud suivant
+            nnode = manager.IndexToNode(nxt) # On cherche l'indice réel correspondant
+            
+            # Incrémentation du coût et de la durée
+            dist += distMat[node][nnode]
+            dur  += durMat[node][nnode]
 
             index = nxt
 
         # Fin de tournée
-        if virtual_end:
-            seq.append("Fin (libre)")
-        else:
-            seq.append("Fin")
+        if not virtual_end:
+            seq.append("Établissement")
 
-        routes.append({
-            "vehicle_id":     vid,
-            "sequence":       seq,
-            "total_distance": dist,
-            "total_duration": dur
-        })
+        if seq != ["Établissement","Établissement"] and seq != ["Établissement"]:
+            routes.append({
+                "vehicle_id":     vid,
+                "sequence":       seq,
+                "total_distance": dist,
+                "total_duration": dur
+            })
 
     return {"status": "SUCCESS", "routes": routes}
 
-
-def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mode="closed"):
-    #Levée d'exception
+def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mode="CLOSED"):
+    print("Mode reçu :", mode)
+    
+    # Levée d'exception
     if not etablissement.adresse or not etablissement.adresse.latitude or not etablissement.adresse.longitude:
-        raise ValueError("L’établissement n’a pas de coordonnées valides.")
+        raise ValueError("L'établissement n'a pas de coordonnées valides.")
 
     for enfant in groupe.enfants.all():
         if not enfant.adresse or not enfant.adresse.latitude or not enfant.adresse.longitude:
-            raise ValueError(f"L'enfant {enfant} n’a pas de coordonnées géographiques.")
-    # --- 1) Coordonnées OSRM ---
+            raise ValueError(f"L'enfant {enfant} n'a pas de coordonnées géographiques.")
+    
+    # On crée la liste en ajoutant le dépot mais on attend les éventuelles options pour finaliser 
     coord_list = [
         f"{c.adresse.longitude},{c.adresse.latitude}"
         for c in groupe.enfants.all()
@@ -93,104 +109,126 @@ def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mo
     depot = f"{etablissement.adresse.longitude},{etablissement.adresse.latitude}"
     coords_list = [depot] + coord_list
 
-    # --- 1.1) Modifications virtuelles selon le mode ---
+    # Ajout de dépot virtuel au début où à la fin en fonction des options.
     virtual_start = False
     virtual_end = False
 
-    if mode == "no_start":
+    if mode == "NO_START":
         virtual_start = True
-        coords_list = ["0,0"] + coords_list  # dépôt virtuel fictif
-
-    elif mode == "no_end":
+    elif mode == "NO_END":
         virtual_end = True
-        coords_list = coords_list + ["0,0"]  # dépôt virtuel fictif
 
-    coords = ";".join(coords_list)
-    distMat, durMat = get_matrices(coords)
+    coords = ";".join(coords_list) # Termine le formatage de la string qu'on va passer en paramètre à l'API OSRM
+    distMat, durMat = get_matrices(coords) # Appel de l'API
 
-    # --- 1.2) Adapter la matrice si dépôt virtuel ---
+    # Adaptation de la matrice si dépôt virtuel
     if virtual_start:
-        # Ligne en plus au début avec zéros vers tous les nœuds (sauf soi-même)
-        row = [0] * len(distMat[0])
-        distMat.insert(0, row)
-        durMat.insert(0, row.copy())
-        for r in distMat[1:]:
-            r.insert(0, 999999)  # Interdire retour vers dépôt virtuel
+        # Ligne en plus au début avec zéros vers tous les noeuds (sauf soi-même) pour pouvoir accéder facilement à tous les noeuds
+        row = [0] * (len(distMat[0]) + 1) # [0, 0, 0, ..., 0]
+        distMat.insert(0, row) # Insère la ligne au début (à l'index 0)
+        durMat.insert(0, row.copy()) # Ici le .copy() permet une séparation en mémoire de la première ligne sans quoi on aurait un problème d'accès
+        for r in distMat[1:]: # Insère une colonne avec des valeurs très grandes hormis la première ligne (On évite ainsi les retours au dépôt)
+            r.insert(0, 999999)  # Interdire retour vers dépôt de départ virtuel
         for r in durMat[1:]:
             r.insert(0, 999999)
         depot_ix = 0
-        offset = 1
+        offset = 1 # Décalage des indices de ma matrice à cause de l'ajout de ma ligne et colonne
+    elif virtual_end:
+        # Ligne en plus au début avec un chiffre très grand vers tous les nœuds (sauf soi-même) pour s'assurer que ce soit le dernier noeuds
+        row = [999999] * (len(distMat[0]) + 1) # [999999, 999999, ..., 999999]
+        distMat.insert(0, row) # Insère la ligne au début (à l'index 0)
+        durMat.insert(0, row.copy()) # Ici le .copy() permet une séparation en mémoire de la première ligne sans quoi on aurait un problème d'accès
+        for r in distMat[1:]: # Insère une colonne avec des valeurs très petites hormis la première ligne, on s'assure l'accès l'accès facile depuis n'importe quel autre point.
+            r.insert(0, 0)  # Faciliter retour vers dépôt virtuel
+        for r in durMat[1:]:
+            r.insert(0, 0)
+        depot_ix = 0
+        offset = 1 # Décalage des indices de ma matrice à cause de l'ajout de ma ligne et colonne
     else:
         depot_ix = 0
         offset = 0
 
-    if virtual_end:
-        # Colonne en plus à la fin avec zéros depuis tous les nœuds
-        for r in distMat:
-            r.append(0)
-        for r in durMat:
-            r.append(0)
-        end_index = len(distMat) - 1
-    else:
-        end_index = depot_ix
-
-    # --- 2) Variables de base ---
+    # Définition des variables
     nb_nodes = len(distMat)
     num_veh  = len(capacities)
 
-    # --- 3) Définir starts/ends ---
+    # Définition des starts/ends
     if virtual_start:
-        starts = [0] * num_veh
+        starts = [depot_ix] * num_veh # indice du dépôt virtuel
+        ends = [depot_ix + offset] * num_veh # indice de l'établissement
+    elif virtual_end:
+        starts = [depot_ix + offset] * num_veh # indice de l'établissement
+        ends = [depot_ix] * num_veh # indice du dépôt virtuel
     else:
-        starts = [depot_ix] * num_veh
-
-    if virtual_end:
-        ends = [end_index] * num_veh
-    else:
-        ends = [depot_ix] * num_veh
-
+        starts = [depot_ix] * num_veh # comme pas d'ajout de ligne => indice de l'établissement
+        ends = [depot_ix] * num_veh # idem
+    
+    # Création de la table d'adressage
     manager = pywrapcp.RoutingIndexManager(
         nb_nodes, num_veh, starts, ends
     )
+
+    # Création du modèle
     routing = pywrapcp.RoutingModel(manager)
 
-    # --- 4) Callback de coût ---
+    # Définition de la fonction de callback des coûts
     def cost_cb(i, j):
         ni = manager.IndexToNode(i)
         nj = manager.IndexToNode(j)
-        return distMat[ni][nj] if calculation_mod == "Distance" else durMat[ni][nj]
+        try:
+            return distMat[ni][nj] if calculation_mod == "Distance" else durMat[ni][nj]
+        except IndexError as e:
+            print(f"[Erreur INDEX] i={i}, j={j}, ni={ni}, nj={nj}")
+            print(f"Dimensions distMat: {len(distMat)}x{len(distMat[0])}")
+            raise e  # Rejette quand même pour que tu vois l’erreur dans la console
+    
+    tc_index = routing.RegisterTransitCallback(cost_cb) # Enregistrement de la fonction de callback des coûts dans le modèle
+    routing.SetArcCostEvaluatorOfAllVehicles(tc_index) # On dit au solver que c'est cette fonction qu'il doit utiliser quand il cherche le coût d'un arc
 
-    tc_index = routing.RegisterTransitCallback(cost_cb)
-    routing.SetArcCostEvaluatorOfAllVehicles(tc_index)
-
-    # --- 5) Dimension capacité ---
-    def demand_cb(i):
+    # Définition de la fonction de callback des capacités
+    def capacity_cb(i):
         ni = manager.IndexToNode(i)
-        return 0 if ni == depot_ix or (virtual_start and ni == 0) else 1
+    
+        # Interdire de visiter le dépôt réel comme point client
+        if (virtual_start or virtual_end) and ni == depot_ix + offset:
+            return 0  # Pas de charge = ne compte pas comme client
+        elif ni == depot_ix:
+            return 0  # Noeud virtuel => pas de charge
+        else:
+            return 1  # Tous les autres sont des clients
 
-    dc_index = routing.RegisterUnaryTransitCallback(demand_cb)
-    routing.AddDimensionWithVehicleCapacity(
-        dc_index,
-        0,
-        capacities,
-        True,
-        "capacity"
+
+    dc_index = routing.RegisterUnaryTransitCallback(capacity_cb) # Enregistrement de la fonction de callback des capacités dans le modèle
+    routing.AddDimensionWithVehicleCapacity( # On dit au solver que c'est cette fonction qu'il doit utiliser quand il cherche la capacité d'un noeud
+        dc_index, # la fonction de callback des capacités
+        0, # aucune tolèrance (capacité supplémentaire autorisée)
+        capacities, # liste des capacités max pour chaque véhicule
+        True, # atteste que la charge au départ est nulle
+        "capacity" # nom de la dimension concernée
     )
 
-    # --- 6) Paramètres de recherche ---
+    # Défintion des paramètres de recherche
     search_params = pywrapcp.DefaultRoutingSearchParameters()
     search_params.first_solution_strategy = (
         routing_enums_pb2.FirstSolutionStrategy.PATH_MOST_CONSTRAINED_ARC
-    )
+    ) # Ici on choisit l'heuristique de recherche pour une première solution trouvée rapidement qui sera par la suite optimisée.
+    # AUTOMATIC = Laisse OR-Tools choisir | PATH_CHEAPEST_ARC = Prends l'arc le moins cher possible
+    # SAVINGS = Heuristique de Clarke-Wright (raisonnement en termes d'économies) | CHRISTOFIDES = Heuristique spécifique au TSP
+    # PATH_MOST_CONSTRAINED_ARC = Prends l'arc le plus contraint (celui qui a le moins de voisins valides restants) | ALL_UNPERFORMED = ne fait rien, utile pour du debug
+    
     search_params.local_search_metaheuristic = (
         routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-    )
-    search_params.time_limit.seconds = time_limit
+    ) # Là on choisit l'heuristique de recherche d'une deuxième solution à partir de la première trouvée
+    # AUTOMATIC = Laisse OR-Tools choisir | GUIDED_LOCAL_SEARCH = Ajoute des penalités aux arcs utilisés trop souvent pour trouver de nouvelles solutions
+    # TABU_SEARCH = Ne revient pas sur les arcs déjà utilisés | SIMULATED_ANNEALING = Acceptation contrôlée de mauvaises solutions
+    # GREEDY_DESCENT = Améliore vite (algo glouton) mais peux vite se bloquer
+    
+    search_params.time_limit.seconds = time_limit # Temps de recherche autorisé
 
-    # --- 7) Solve ---
+    # Lancement de la résolution
     sol = routing.SolveWithParameters(search_params)
     if not sol:
         return {"status": "FAILURE", "routes": []}
 
-    # --- 8) Formatage final avec noms d'enfants ---
-    return format_solution(manager, routing, sol, distMat, durMat, groupe)
+    # Si une solution est trouvée, on formate
+    return format_solution(manager, routing, sol, distMat, durMat, groupe, virtual_start, virtual_end)

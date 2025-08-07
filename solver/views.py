@@ -1,3 +1,4 @@
+import folium
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Run
@@ -24,5 +25,62 @@ def run_create(request):
     return render(request, 'solver/parametrage.html',{'form' : form})
 
 def run_detail(request, pk):
-    run = get_object_or_404(Run, pk = pk)
-    return render(request, "solver/run_detail.html", {'run' : run})
+    run = get_object_or_404(Run, pk=pk)
+
+    # Charger les données JSON
+    data = json.loads(run.result_json)
+
+    # Enfants et établissement
+    enfants = list(run.groupe.enfants.all())
+    etab = run.etablissement
+    etab_coords = (etab.adresse.latitude, etab.adresse.longitude)
+
+    # Coords enfants pour centrage carte
+    coords = [(e.adresse.latitude, e.adresse.longitude) for e in enfants]
+    if etab_coords:
+        coords.append(etab_coords)
+
+    # Centrage carte
+    if coords:
+        moy_lat = sum(c[0] for c in coords) / len(coords)
+        moy_lon = sum(c[1] for c in coords) / len(coords)
+    else:
+        moy_lat, moy_lon = 43.3, 5.4  # fallback (Marseille par ex)
+
+    m = folium.Map(location=[moy_lat, moy_lon], zoom_start=11)
+
+    # Établissement
+    folium.Marker(
+        location=etab_coords,
+        popup="Établissement",
+        icon=folium.Icon(color="green", icon="home")
+    ).add_to(m)
+
+    # Routes optimisées
+    for route in data.get("routes", []):
+        points = []
+        for name in route["sequence"]:
+            if name in ["Fin", "Fin (libre)"]:
+                continue
+            elif name == "Établissement":
+                points.append(etab_coords)
+            else:
+                # Nom = "Prénom Nom" → retrouver l’enfant
+                for e in enfants:
+                    if f"{e.prenom} {e.nom}" == name:
+                        points.append((e.adresse.latitude, e.adresse.longitude))
+                        break
+
+        # Lignes + marqueurs
+        if points:
+            folium.PolyLine(points, color="blue", weight=4).add_to(m)
+            for lat, lon in points:
+                folium.CircleMarker(location=(lat, lon), radius=4, color="red", fill=True).add_to(m)
+
+    # Convertir carte → HTML
+    map_html = m._repr_html_()
+
+    return render(request, 'solver/run_detail.html', {
+        'run': run,
+        'map': map_html
+    })
