@@ -1,6 +1,7 @@
 import folium
 import json
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, FileResponse
 from .models import Run
 from .forms import RunForm
 from .services import *
@@ -84,3 +85,27 @@ def run_detail(request, pk):
         'run': run,
         'map': map_html
     })
+
+def download_excel(request, pk):
+    run = get_object_or_404(Run, pk=pk)
+
+    # Charger les données JSON
+    data = json.loads(run.result_json)
+
+    # Ajouter un nom de tournée s'il manque (requis par export_to_excel_formatted)
+    if "nom_tournee" not in data:
+        data["nom_tournee"] = f"Tournée_{run.pk}"
+
+    # Générer le fichier Excel
+    excel_file = export_to_excel_formatted(data)
+
+    # Nom du fichier
+    filename = f"Tournée_{run.pk}.xlsx"
+
+    # Retourner le fichier en téléchargement
+    return FileResponse(
+        excel_file,
+        as_attachment=True,
+        filename=filename,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )

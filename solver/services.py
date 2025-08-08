@@ -1,6 +1,9 @@
 from math import ceil
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 import requests
+from openpyxl import Workbook
+from openpyxl.styles import Font
+from io import BytesIO
 
 def get_matrices(coords, annotations=("distance","duration")):
     """
@@ -23,7 +26,7 @@ def get_matrices(coords, annotations=("distance","duration")):
     durMat  = [[int(d) for d in row] for row in data["durations"]]
     return distMat, durMat
 
-def format_solution(manager, routing, solution, distMat, durMat, group,
+def format_solution(manager, routing, solution, distMat, durMat, groupe, etablissement,
                     virtual_start, virtual_end):
     """
     Retourne un dict sérialisable incluant pour chaque nœud:
@@ -37,15 +40,17 @@ def format_solution(manager, routing, solution, distMat, durMat, group,
     print("STARTS:", [manager.IndexToNode(routing.Start(vid)) for vid in range(routing.vehicles())])
     print("ENDS:", [manager.IndexToNode(routing.End(vid)) for vid in range(routing.vehicles())])
     print("Virtual start:", virtual_start, "Virtual end:", virtual_end)
+    
+    # Initialisation de variables
     routes = []
-    enfants = list(group.enfants.all())
+    enfants = list(groupe.enfants.all())
 
-    # Index du vrai établissement (dépend de la présence du dépôt virtuel)
+    # Index de l'établissement (dépend de la présence du dépôt virtuel)
     depot_node = 0 if not(virtual_start or virtual_end) else 1
 
     for vid in range(routing.vehicles()): # On boucle pour chaque véhicule
         index = routing.Start(vid) # Donne l'indice OR-Tools du point de départ du véhicule vid
-        seq, dist, dur = [], 0, 0 # seq = séquence de noeuds visités | dist = distance totale de la tournée | dur = durée totale de la tournée
+        seq, noms, prenoms, adresses, villes, distances, durees, dist_tot, dur_tot, = [], [], [], [], [], [], [], 0, 0 # seq = séquence de noeuds visités | dist = distance totale de la tournée | dur = durée totale de la tournée
 
         while not routing.IsEnd(index): # On regarde si on est au dernier noeud de la tournée
             node = manager.IndexToNode(index) # conversion de l'index OR-Tools en indice réel
@@ -56,36 +61,69 @@ def format_solution(manager, routing, solution, distMat, durMat, group,
             if not is_virtual_start:
                 if node == depot_node:
                     seq.append("Établissement")
+                    prenoms.append(etablissement.code)
+                    noms.append(etablissement.nom)
+                    adresses.append(etablissement.adresse.num_et_rue)
+                    villes.append(etablissement.adresse.ville)
                 else:
-                    if virtual_start:
+                    if virtual_start or virtual_end:
                         enfant_index = node - 2
                     else:
                         enfant_index = node - 1 # L'ordre se réfère aux ajouts dans coord_list, ainsi il s'agit de regarder par rapport à ça pour connaitre l'index des enfants
                     if 0 <= enfant_index < len(enfants): # Mesure de sécurité, évite un index out of range si erreur d'offset ou de calcul
                         child = enfants[enfant_index]
                         seq.append(f"{child.prenom} {child.nom}")
+                        noms.append(child.nom)
+                        prenoms.append(child.prenom)
+                        adresses.append(child.adresse.num_et_rue)
+                        villes.append(child.adresse.ville)
+
                     else:
-                        seq.append(f"[Nœud {node}]")  # Sécurité
+                        seq.append(f"[Nœud {node}]") 
+                        adresses.append("None") # Sécurité
 
             nxt = solution.Value(routing.NextVar(index)) # On passe au noeud suivant
             nnode = manager.IndexToNode(nxt) # On cherche l'indice réel correspondant
             
-            # Incrémentation du coût et de la durée
-            dist += distMat[node][nnode]
-            dur  += durMat[node][nnode]
+            # Récuperation du coût et de la durée de l'étape
+            dist = distMat[node][nnode]
+            dur  = durMat[node][nnode]
+            
+            # Incrémentation des coûts totaux
+            dist_tot += dist
+            dur_tot  += dur
+
+            # Ajout des coûts intermediaires
+            if not is_virtual_start and not(virtual_end and nnode == 0):
+                distances.append(float(dist)/1000)
+                durees.append(f"{dur//3600} h {(dur%3600)//60} min {(dur%3600)%60} secondes")
+
 
             index = nxt
 
         # Fin de tournée
         if not virtual_end:
             seq.append("Établissement")
+            prenoms.append(etablissement.code)
+            noms.append(etablissement.nom)
+            adresses.append(etablissement.adresse.num_et_rue)
+            villes.append(etablissement.adresse.ville)
+
 
         if seq != ["Établissement","Établissement"] and seq != ["Établissement"]:
             routes.append({
-                "vehicle_id":     vid,
-                "sequence":       seq,
-                "total_distance": dist,
-                "total_duration": dur
+                "nom_tournee": groupe.nom,
+                "vehicle_id": vid,
+                "sequence": seq,
+                "noms": noms,
+                "prenoms": prenoms,
+                "adresses": adresses,
+                "villes": villes,
+                "distances": distances,
+                "durees": durees,
+                "distance_totale": f"{float(dist_tot)/1000} km",
+                "duree_totale": f"{dur_tot//3600} h {(dur_tot%3600)//60} min {(dur_tot%3600)%60} secondes"
+
             })
 
     return {"status": "SUCCESS", "routes": routes}
@@ -191,9 +229,9 @@ def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mo
     
         # Interdire de visiter le dépôt réel comme point client
         if (virtual_start or virtual_end) and ni == depot_ix + offset:
-            return 0  # Pas de charge = ne compte pas comme client
+            return 0  # Pas de charge car c'est l'établissement
         elif ni == depot_ix:
-            return 0  # Noeud virtuel => pas de charge
+            return 0  # Noeud virtuel ou etablissement dans le cas closed 
         else:
             return 1  # Tous les autres sont des clients
 
@@ -231,4 +269,69 @@ def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mo
         return {"status": "FAILURE", "routes": []}
 
     # Si une solution est trouvée, on formate
-    return format_solution(manager, routing, sol, distMat, durMat, groupe, virtual_start, virtual_end)
+    return format_solution(manager, routing, sol, distMat, durMat, groupe, etablissement, virtual_start, virtual_end)
+
+def export_to_excel_formatted(data):
+    wb = Workbook() # Création d'un fichier excel 
+    ws = wb.active # On stipule sur quelle feuille de travail on se place
+    ws.title = f"Résultats {data["nom_tournee"]}" # Ajout d'un titre
+
+    for i, route in enumerate(data["routes"]):
+        if i != 0:
+            ws.append([])  # ligne vide entre les blocs
+
+        # En-tête taxi
+        ws.append([f"Taxi {route['vehicle_id']}"])
+        ws.append([])
+
+        # En-têtes colonnes
+        nb_etapes = len(route['sequence'])
+        cols = ["Départ"] + [f"Enfant {i}" for i in range(1, nb_etapes - 1)] + ["Fin", "TOTAL"]
+        ws.append([""] + cols)
+
+        # Initialiser les lignes
+        lignes = {
+            "Nom": [],
+            "Prénom": [],
+            "Adresse": [],
+            "Ville": [],
+            "Distance": [],
+            "Temps": [],
+        }
+
+        for idx in range(nb_etapes):
+            lignes["Nom"].append(route["noms"][idx])
+            lignes["Prénom"].append(route["prenoms"][idx])
+            lignes["Adresse"].append(route["adresses"][idx])
+            lignes["Ville"].append(route["villes"][idx])
+            if idx == 0:
+                lignes["Distance"].append("0.0")
+                lignes["Temps"].append("0 h 0 min 0 secondes")
+            else:
+                lignes["Distance"].append(route["distances"][idx - 1])
+                lignes["Temps"].append(route["durees"][idx - 1])
+
+        # Ajouter la colonne "TOTAL"
+        lignes["Nom"].append("")
+        lignes["Prénom"].append("")
+        lignes["Adresse"].append("")
+        lignes["Ville"].append("")
+        lignes["Distance"].append(route["distance_totale"])
+        lignes["Temps"].append(route["duree_totale"])
+
+        # Écrire dans le fichier
+        for key in ["Nom", "Prénom", "Adresse", "Ville", "Distance", "Temps"]:
+            ligne = [key] + lignes[key]
+            ws.append(ligne)
+
+    # Style : mettre "Taxi X" en gras
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
+        cell = row[0]
+        if isinstance(cell.value, str) and cell.value.startswith("Taxi"):
+            cell.font = Font(bold=True, size=12)
+
+    # Sauvegarde dans un buffer en mémoire
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output

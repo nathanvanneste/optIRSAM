@@ -21,6 +21,12 @@
       <p>Résultat brut : {{ run.result_json }}</p>
     </div>
     <div>
+      <h1>Bouton de téléchargement</h1>
+      <a href="{% url 'download_excel' run.pk %}" class="btn btn-primary"
+        >📥 Télécharger l'Excel</a
+      >
+    </div>
+    <div>
       <h2>Carte :</h2>
       {{ map|safe }}
     </div>
