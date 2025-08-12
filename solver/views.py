@@ -92,15 +92,11 @@ def download_excel(request, pk):
     # Charger les données JSON
     data = json.loads(run.result_json)
 
-    # Ajouter un nom de tournée s'il manque (requis par export_to_excel_formatted)
-    if "nom_tournee" not in data:
-        data["nom_tournee"] = f"Tournée_{run.pk}"
-
     # Générer le fichier Excel
     excel_file = export_to_excel_formatted(data)
 
     # Nom du fichier
-    filename = f"Tournée_{run.pk}.xlsx"
+    filename = f"{data["routes"][0]["nom_tournee"]}.xlsx"
 
     # Retourner le fichier en téléchargement
     return FileResponse(

@@ -2,7 +2,8 @@ from math import ceil
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 import requests
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
 from io import BytesIO
 
 def get_matrices(coords, annotations=("distance","duration")):
@@ -274,20 +275,18 @@ def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mo
 def export_to_excel_formatted(data):
     wb = Workbook() # Création d'un fichier excel 
     ws = wb.active # On stipule sur quelle feuille de travail on se place
-    ws.title = f"Résultats {data["nom_tournee"]}" # Ajout d'un titre
+    ws.title = data["routes"][0]["nom_tournee"] # Ajout d'un titre
 
     for i, route in enumerate(data["routes"]):
         if i != 0:
-            ws.append([])  # ligne vide entre les blocs
-
-        # En-tête taxi
-        ws.append([f"Taxi {route['vehicle_id']}"])
-        ws.append([])
+            ws.append([]) # lignes vides entre les blocs
+            ws.append([]) 
+            
 
         # En-têtes colonnes
         nb_etapes = len(route['sequence'])
-        cols = ["Départ"] + [f"Enfant {i}" for i in range(1, nb_etapes - 1)] + ["Fin", "TOTAL"]
-        ws.append([""] + cols)
+        cols = ["Départ"] + [f"Enfant {i}" for i in range(1, nb_etapes - 1)] + ["Fin"]
+        ws.append([f"Taxi {i}"] + cols)
 
         # Initialiser les lignes
         lignes = {
@@ -305,33 +304,52 @@ def export_to_excel_formatted(data):
             lignes["Adresse"].append(route["adresses"][idx])
             lignes["Ville"].append(route["villes"][idx])
             if idx == 0:
-                lignes["Distance"].append("0.0")
+                lignes["Distance"].append("0.0 km")
                 lignes["Temps"].append("0 h 0 min 0 secondes")
             else:
-                lignes["Distance"].append(route["distances"][idx - 1])
+                lignes["Distance"].append(f"{route["distances"][idx - 1]} km")
                 lignes["Temps"].append(route["durees"][idx - 1])
-
-        # Ajouter la colonne "TOTAL"
-        lignes["Nom"].append("")
-        lignes["Prénom"].append("")
-        lignes["Adresse"].append("")
-        lignes["Ville"].append("")
-        lignes["Distance"].append(route["distance_totale"])
-        lignes["Temps"].append(route["duree_totale"])
 
         # Écrire dans le fichier
         for key in ["Nom", "Prénom", "Adresse", "Ville", "Distance", "Temps"]:
             ligne = [key] + lignes[key]
             ws.append(ligne)
 
+        # Footer distance totale et duree totale
+        ws.append([""])
+        ws.append(["Distance totale"] + [route["distance_totale"]] + ["Temps total"] + [route["duree_totale"]])
+
     # Style : mettre "Taxi X" en gras
-    for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
-        cell = row[0]
-        if isinstance(cell.value, str) and cell.value.startswith("Taxi"):
-            cell.font = Font(bold=True, size=12)
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+        for cell in row:
+            if isinstance(cell.value, str):
+                if cell.value.startswith("Taxi"):
+                    cell.font = Font(bold=True, size=12)
+                elif cell.value in ("Distance totale", "Temps total"):
+                    cell.font = Font(bold=True, size=12)
+                else:
+                    if cell.column == 1 or (isinstance(row[0].value, str) and row[0].value.startswith("Taxi")):
+                        cell.font = Font(italic=True)
+
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+        for cell in row:
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+    for col_cells in ws.columns:
+        # id de colonne (A, B, C…)
+        col_letter = get_column_letter(col_cells[0].column)
+        max_len = 0
+        for c in col_cells:
+            if c.value is not None:
+                # longueur du texte (sans styles)
+                max_len = max(max_len, len(str(c.value)))
+        # marge + plafond pour éviter des colonnes démesurées
+        ws.column_dimensions[col_letter].width = max(14, min(45, max_len + 2))
 
     # Sauvegarde dans un buffer en mémoire
     output = BytesIO()
     wb.save(output)
     output.seek(0)
     return output
+
+
