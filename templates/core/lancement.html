@@ -1,26 +1,11 @@
-<!DOCTYPE html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lancement</title>
-    <!-- icône de l'onglet -->
-    <link rel="shortcut icon" href="/static/images/logo_picto.png" />
-  </head>
-  <body>
-    <div>
-      <!-- logo de l'asso en coin -->
-      <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
-    </div>
-    <div>
-      <!-- logo de l'application -->
-      <img src="/static/images/logo_optIRSAM.png" alt="logo du produit" />
-    </div>
-    <div>
-      <!-- titre -->
-      <h1>Bienvenue sur OptIRSAM !</h1>
-      <!-- bouton de lancement -->
-      <button onclick="window.location.href = '/accueil/'">Commencer</button>
-    </div>
-  </body>
-</html>
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Bienvenue{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <img src="{% static 'images/logo_optIRSAM.png' %}" alt="logo produit" class="mb-4" style="height:288px"/>
+  <h1 class="mb-3">Bienvenue sur OptIRSAM !</h1>
+  <a href="{% url 'accueil' %}" class="btn btn-primary btn-lg">Commencer</a>
+</div>
+{% endblock %}

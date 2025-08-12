@@ -1,51 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Paramétrage de la résolution</title>
-    <!-- Icône de l'onglet -->
-    <link rel="shortcut icon" href="/static/images/logo_picto.png" />
-  </head>
-  <body>
-    <div>
-      <!-- logo de l'asso en coin -->
-      <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
-    </div>
-    <div><h1>Ici les infos</h1></div>
-    <div>
-      {% if type == "enfant" %}
-      <ul>
-        <li>Nom : {{ objet.nom }}</li>
-        <li>Prénom : {{ objet.prenom }}</li>
-        <li>Adresse : {{ objet.adresse }}</li>
-      </ul>
+{% extends "base.html" %}
+{% block title %}Infos{% endblock %}
 
-      {% elif type == "etablissement" %}
-      <ul>
-        <li>Nom : {{ objet.nom }}</li>
-        <li>Code : {{ objet.code }}</li>
-        <li>Adresse : {{ objet.adresse }}</li>
-      </ul>
+{% block content %}
+<h1 class="mb-4">Informations</h1>
 
-      {% elif type == "groupe" %}
-      <ul>
-        <li>Nom : {{ objet.nom }}</li>
+<div class="card">
+  <div class="card-body">
+    {% if type == "enfant" %}
+      <ul class="list-unstyled mb-0">
+        <li><strong>Nom :</strong> {{ objet.nom }}</li>
+        <li><strong>Prénom :</strong> {{ objet.prenom }}</li>
+        <li><strong>Adresse :</strong> {{ objet.adresse }}</li>
+      </ul>
+    {% elif type == "etablissement" %}
+      <ul class="list-unstyled mb-0">
+        <li><strong>Nom :</strong> {{ objet.nom }}</li>
+        <li><strong>Code :</strong> {{ objet.code }}</li>
+        <li><strong>Adresse :</strong> {{ objet.adresse }}</li>
+      </ul>
+    {% elif type == "groupe" %}
+      <ul class="list-unstyled">
+        <li><strong>Nom :</strong> {{ objet.nom }}</li>
+      </ul>
+      <h2 class="h6 mt-3">Usagers du groupe</h2>
+      <ul class="list-group">
         {% for enfant in objet.enfants.all %}
-        <li>{{ enfant }}</li>
+          <li class="list-group-item">{{ enfant }}</li>
+        {% empty %}
+          <li class="list-group-item text-muted">Aucun usager</li>
         {% endfor %}
       </ul>
+    {% else %}
+      <div class="alert alert-warning mb-0">Type d'objet non pris en charge.</div>
+    {% endif %}
+  </div>
+</div>
 
-      {% else %}
-      <p>Type d'objet non pris en charge.</p>
-      {% endif %}
-    </div>
-    <div>
-      <!-- Bouton de retour à l'accueil -->
-      <button onclick="window.location.href = '/accueil'">
-        <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
-      </button>
-      <button onclick="window.location.href = '/users'">&#8592;</button>
-    </div>
-  </body>
-</html>
+<div class="mt-3 d-flex gap-2">
+  <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
+  <a href="{% url 'donnees_list' %}" class="btn btn-light">← Retour</a>
+</div>
+{% endblock %}

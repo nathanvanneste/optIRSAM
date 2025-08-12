@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'django_filters',
     'core',
     'solver',
-    'reports',
     'user',
 ]
 

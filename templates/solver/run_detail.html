@@ -1,40 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Résultats d'une résolution</title>
-    <!-- Icône de l'onglet -->
-    <link rel="shortcut icon" href="/static/images/logo_picto.png" />
-  </head>
-  <body>
-    <div>
-      <!-- logo de l'asso en coin -->
-      <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
+{% extends "base.html" %}
+{% block title %}Résultats de la résolution{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Détail de la Run</h1>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <p><strong>Status :</strong> {{ run.status }}</p>
+        <p><strong>Capacité :</strong> {{ run.capacity }}</p>
+        <p><strong>Date de création :</strong> {{ run.created_at }}</p>
+        <details>
+          <summary class="mb-2">Résultat brut (JSON)</summary>
+          <pre class="bg-light p-3 rounded small">{{ run.result_json }}</pre>
+        </details>
+        <a href="{% url 'download_excel' run.pk %}" class="btn btn-primary mt-2">Télécharger l'Excel</a>
+      </div>
     </div>
-    <div>
-      <!-- Détail de la solution -->
-      <h1>Détail de la Run</h1>
-      <p>Status : {{ run.status }}</p>
-      <p>Capacité : {{ run.capacity }}</p>
-      <p>Date de création : {{ run.created_at }}</p>
-      <p>Résultat brut : {{ run.result_json }}</p>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Carte</h2>
+        <div class="ratio ratio-4x3">
+          <div class="border rounded overflow-auto p-2">
+            {{ map|safe }}
+          </div>
+        </div>
+      </div>
     </div>
-    <div>
-      <h1>Bouton de téléchargement</h1>
-      <a href="{% url 'download_excel' run.pk %}" class="btn btn-primary"
-        >📥 Télécharger l'Excel</a
-      >
-    </div>
-    <div>
-      <h2>Carte :</h2>
-      {{ map|safe }}
-    </div>
-    <div>
-      <!-- Bouton de retour à l'accueil -->
-      <button onclick="window.location.href = '/accueil'">
-        <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
-      </button>
-    </div>
-  </body>
-</html>
+  </div>
+</div>
+
+<div class="mt-3">
+  <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
+</div>
+{% endblock %}

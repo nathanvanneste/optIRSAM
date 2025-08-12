@@ -1,110 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gestion des données</title>
-    <!-- Icône de l'onglet -->
-    <link rel="shortcut icon" href="/static/images/logo_picto.png" />
-  </head>
-  <body>
-    <div>
-      <!-- logo de l'asso en coin -->
-      <img src="/static/images/logo_IRSAM.png" alt="logo de l'assocation" />
-    </div>
-    <div>
-      <h1>Gestion des données</h1>
-    </div>
-    <div>
-      <!-- Bouton de retour à l'accueil -->
-      <button onclick="window.location.href = '/accueil'">
-        <img src="/static/images/logo_accueil.png" alt="logo de l'assocation" />
-      </button>
-    </div>
-    <div>
-      <h2>Filtres sur les usagers</h2>
-      <form method="get">
-        {{ filtre.form.as_p }}
-        <input type="submit" value="Filtrer" />
-      </form>
-    </div>
-    <div>
-      <!-- Affichage des données -->
+{% extends "base.html" %}
+{% block title %}Gestion des données{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Gestion des données</h1>
+
+<section class="card mb-4">
+  <div class="card-body">
+    <h2 class="h5 mb-3">Filtres sur les usagers</h2>
+    <form method="get" class="row g-3">
+      {{ filtre.form.as_p }}
       <div>
-        <!-- Affichage des usagers -->
-        <h2>Usagers</h2>
-        <ul>
+        <button type="submit" class="btn btn-primary">Filtrer</button>
+        <a href="{% url 'donnees_list' %}" class="btn btn-secondary">Effacer</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div class="row g-4">
+  <!-- Usagers -->
+  <section class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h2 class="h5 mb-0">Usagers</h2>
+          <a href="{% url 'add_enfant' %}" class="btn btn-success btn-sm">Ajouter usager</a>
+        </div>
+        <ul class="list-group" style="max-height: 300px; overflow-y: auto;">
           {% for enfant in enfants %}
-          <li>
-            {{enfant}}
-            <!-- Bouton d'affichage des infos d'un enfant -->
-            <a href="{% url 'infos' 'enfant' enfant.id %}">
-              <button type="button">+ d'infos</button>
-            </a>
-            <!-- Bouton de modification de l'enfant -->
-            <a href="{% url 'edit_enfant' enfant.id %}">
-              <button type="button">modifier</button>
-            </a>
-            <!-- Bouton de suppression de l'enfant -->
-            <a
-              href="{% url 'remove_enfant' enfant.id %}"
-              onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ enfant.prenom }} {{ enfant.nom }} ?');"
-            >
-              <button type="button">supprimer</button>
-            </a>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ enfant }}</span>
+            <div class="btn-group">
+              <a href="{% url 'infos' 'enfant' enfant.id %}" class="btn btn-outline-primary btn-sm">+ d'infos</a>
+              <a href="{% url 'edit_enfant' enfant.id %}" class="btn btn-outline-secondary btn-sm">Modifier</a>
+              <a href="{% url 'remove_enfant' enfant.id %}" class="btn btn-outline-danger btn-sm"
+                 onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ enfant.prenom }} {{ enfant.nom }} ?');">
+                 Supprimer
+              </a>
+            </div>
           </li>
-          {% endfor %}
-        </ul>
-        <!-- Bouton d'ajout d'usagers -->
-        <a href="{% url 'add_enfant' %}">
-          <button type="button">Ajouter usager</button>
-        </a>
-      </div>
-      <div>
-        <!-- Affichage des groupes -->
-        <h2>Groupes</h2>
-        <ul>
-          {% for groupe in groupes %}
-          <li>
-            {{groupe}}
-            <!-- Bouton d'affichage des infos d'un groupe -->
-            <a href="{% url 'infos' 'groupe' groupe.id %}">
-              <button type="button">+ d'infos</button>
-            </a>
-            <!-- Bouton de modification de groupe -->
-            <a href="{% url 'edit_groupe' groupe.id %}">
-              <button type="button">modifier</button>
-            </a>
-            <!-- Bouton de suppression du groupe -->
-            <a
-              href="{% url 'remove_groupe' groupe.id %}"
-              onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ groupe.nom }} ?');"
-            >
-              <button type="button">supprimer</button>
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-        <!-- Bouton d'ajout d'un groupe -->
-        <a href="{% url 'add_groupe' %}">
-          <button type="button">Ajouter groupe</button>
-        </a>
-      </div>
-      <div>
-        <!-- Affichage des établissements -->
-        <h2>Etablissements</h2>
-        <ul>
-          {% for etablissement in etablissements %}
-          <li>
-            {{etablissement}}
-            <!-- Bouton d'affichage des infos d'un établissement -->
-            <a href="{% url 'infos' 'etablissement' etablissement.id %}">
-              <button type="button">+ d'infos</button>
-            </a>
-          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">Aucun usager</li>
           {% endfor %}
         </ul>
       </div>
     </div>
-  </body>
-</html>
+  </section>
+
+  <!-- Groupes -->
+  <section class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h2 class="h5 mb-0">Groupes</h2>
+          <a href="{% url 'add_groupe' %}" class="btn btn-success btn-sm">Ajouter groupe</a>
+        </div>
+        <ul class="list-group" style="max-height: 300px; overflow-y: auto;">
+          {% for groupe in groupes %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ groupe }}</span>
+            <div class="btn-group">
+              <a href="{% url 'infos' 'groupe' groupe.id %}" class="btn btn-outline-primary btn-sm">+ d'infos</a>
+              <a href="{% url 'edit_groupe' groupe.id %}" class="btn btn-outline-secondary btn-sm">Modifier</a>
+              <a href="{% url 'remove_groupe' groupe.id %}" class="btn btn-outline-danger btn-sm"
+                 onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ groupe.nom }} ?');">
+                 Supprimer
+              </a>
+            </div>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">Aucun groupe</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Établissements -->
+  <section class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Établissements</h2>
+        <ul class="list-group" style="max-height: 300px; overflow-y: auto;">
+          {% for etablissement in etablissements %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ etablissement }}</span>
+            <a href="{% url 'infos' 'etablissement' etablissement.id %}" class="btn btn-outline-primary btn-sm">+ d'infos</a>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted">Aucun établissement</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
