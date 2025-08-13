@@ -8,14 +8,21 @@
   <div class="col-12 col-lg-6">
     <div class="card h-100">
       <div class="card-body">
-        <p><strong>Status :</strong> {{ run.status }}</p>
-        <p><strong>Capacité :</strong> {{ run.capacity }}</p>
-        <p><strong>Date de création :</strong> {{ run.created_at }}</p>
-        <details>
-          <summary class="mb-2">Résultat brut (JSON)</summary>
-          <pre class="bg-light p-3 rounded small">{{ run.result_json }}</pre>
-        </details>
-        <a href="{% url 'download_excel' run.pk %}" class="btn btn-primary mt-2">Télécharger l'Excel</a>
+        {% if run.status == "SUCCESS" %}
+          <p><strong>Détails de la résolution:</strong></p>
+          <p><strong>Groupe:</strong> {{ run.groupe.nom }}</p>
+          <p><strong>Date de création :</strong> {{ run.created_at }}</p>
+          <!-- <p><strong>Status :</strong> {{ run.status }}</p> -->
+          <!-- <p><strong>Capacité :</strong> {{ run.capacity }}</p> -->
+          <p>Une solution a été trouvée. Voici le résultat proposé:</p>
+          <details>
+            <summary class="mb-2">Résultat brut (JSON)</summary>
+            <pre class="bg-light p-3 rounded small">{{ run.result_json }}</pre>
+          </details>
+          <a href="{% url 'download_excel' run.pk %}" class="btn btn-primary mt-2">Télécharger l'Excel</a>
+        {% else %}
+          <p>Malheureusement, nous n'avons pas trouvé de solution. Veuillez réessayer avec d'autres paramètres.</p> 
+        {% endif %}
       </div>
     </div>
   </div>
