@@ -17,7 +17,7 @@ class AdresseForm(forms.ModelForm):
     
 class GroupeForm(forms.ModelForm):
     enfants = forms.ModelMultipleChoiceField(
-        queryset=Enfant.objects.none(),  # queryset vide par défaut
+        queryset=Enfant.objects.all(),
         label="Enfants du groupe",
         widget=forms.CheckboxSelectMultiple(
             attrs={
@@ -30,12 +30,3 @@ class GroupeForm(forms.ModelForm):
         model = Groupe
         fields = ['nom', 'enfants']
         labels = {'nom': 'Nom du Groupe'}
-
-    def __init__(self, *args, **kwargs):
-        # On récupère la queryset dynamique passée en kwargs
-        enfants_queryset = kwargs.pop('enfants_queryset', None)
-        super().__init__(*args, **kwargs)
-        if enfants_queryset is not None:
-            self.fields['enfants'].queryset = enfants_queryset
-        else:
-            self.fields['enfants'].queryset = Enfant.objects.all()

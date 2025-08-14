@@ -83,21 +83,18 @@ def enfant_remove(request, enfant_id):
     return redirect("donnees_list")
 
 def groupe_add(request):
-    filtre_enfant = EnfantFilter(request.GET, queryset=Enfant.objects.all())
-    enfants_filtres = filtre_enfant.qs
-
+    
     if request.method == 'POST':
-        form = GroupeForm(request.POST, enfants_queryset=enfants_filtres)
+        form = GroupeForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("donnees_list")
     else:
-        form = GroupeForm(enfants_queryset=enfants_filtres)
+        form = GroupeForm()
 
     return render(request, "user/groupe_add.html", {
-        "filtre": filtre_enfant,
-        "enfants": enfants_filtres,
-        "form": form
+        "form": form,
+        "etablissements": Etablissement.objects.all()
     })
 
 def groupe_edit(request, groupe_id):
@@ -111,7 +108,7 @@ def groupe_edit(request, groupe_id):
     else:
         form = GroupeForm(instance = groupe)
 
-    return render(request, "user/groupe_edit.html", {"form": form})
+    return render(request, "user/groupe_edit.html", {"form": form, "etablissements": Etablissement.objects.all()})
 
 def groupe_remove(request, groupe_id):
     groupe = Groupe.objects.get(pk = groupe_id)
