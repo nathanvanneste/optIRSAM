@@ -95,8 +95,12 @@ def download_excel(request, pk):
     # Générer le fichier Excel
     excel_file = export_to_excel_formatted(data)
 
-    # Nom du fichier
-    filename = f"{data["routes"][0]["nom_tournee"]}.xlsx"
+    # On va nettoyer le nom du fichier excel qui ne peut contenir certains caractère
+    nom_sans_extension = nettoyage_nom_excel(data["routes"][0]["nom_tournee"])
+
+
+    # Création du nom de fichier final
+    filename = f"{nom_sans_extension}.xlsx"
 
     # Retourner le fichier en téléchargement
     return FileResponse(

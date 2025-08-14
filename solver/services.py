@@ -1,3 +1,5 @@
+import re
+import unicodedata
 from math import ceil
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 import requests
@@ -272,10 +274,27 @@ def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mo
     # Si une solution est trouvée, on formate
     return format_solution(manager, routing, sol, distMat, durMat, groupe, etablissement, virtual_start, virtual_end)
 
+def nettoyage_nom_excel(nom_brut):
+    nom_sans_accent = ''.join(
+        c for c in unicodedata.normalize('NFKD', nom_brut)
+        if not unicodedata.combining(c)
+    )
+
+    # Remplacer les caractères interdits par un underscore
+    nom_nettoye = re.sub(r'[^A-Za-z0-9 _-]', '_', nom_sans_accent)
+
+    # Supprimer les espaces en début/fin
+    nom_nettoye = nom_nettoye.strip()
+
+    # Limiter la longueur 
+    nom_nettoye = nom_nettoye[:50]  # exemple: on limite à 50 caractères
+
+    return nom_nettoye
+
 def export_to_excel_formatted(data):
     wb = Workbook() # Création d'un fichier excel 
     ws = wb.active # On stipule sur quelle feuille de travail on se place
-    ws.title = data["routes"][0]["nom_tournee"] # Ajout d'un titre
+    ws.title = nettoyage_nom_excel(data["routes"][0]["nom_tournee"]) # Ajout d'un titre
 
     for i, route in enumerate(data["routes"]):
         if i != 0:
@@ -286,7 +305,7 @@ def export_to_excel_formatted(data):
         # En-têtes colonnes
         nb_etapes = len(route['sequence'])
         cols = ["Départ"] + [f"Enfant {i}" for i in range(1, nb_etapes - 1)] + ["Fin"]
-        ws.append([f"Taxi {i}"] + cols)
+        ws.append([f"Taxi {i+1}"] + cols)
 
         # Initialiser les lignes
         lignes = {
