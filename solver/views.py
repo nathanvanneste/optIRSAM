@@ -14,8 +14,12 @@ def run_create(request):
             run.status = 'RUNNING'
             run.save()
             nb_enfants = run.groupe.enfants.count()
-            capacite_taxi = run.capacity
-            capacities = [capacite_taxi]*nb_enfants
+            if run.vehicules == 'VOITURES':
+                capacities = [4]*nb_enfants
+            elif run.vehicules == 'VANS':
+                capacities = [8]*nb_enfants
+            else:
+                capacities = [4,8]*nb_enfants
             result_python = solve_vrp(run.groupe, run.etablissement, capacities, run.time_limit, run.calculation_mod, run.mode)
             run.status = result_python["status"]
             run.result_json = json.dumps(result_python, indent = 2, ensure_ascii = False)

@@ -82,7 +82,7 @@ def format_solution(manager, routing, solution, distMat, durMat, groupe, etablis
                         villes.append(child.adresse.ville)
 
                     else:
-                        seq.append(f"[Nœud {node}]") 
+                        seq.append(f"[Noeud {node}]") 
                         adresses.append("None") # Sécurité
 
             nxt = solution.Value(routing.NextVar(index)) # On passe au noeud suivant
@@ -217,7 +217,7 @@ def solve_vrp(groupe, etablissement, capacities, time_limit, calculation_mod, mo
         ni = manager.IndexToNode(i)
         nj = manager.IndexToNode(j)
         try:
-            return distMat[ni][nj] if calculation_mod == "Distance" else durMat[ni][nj]
+            return distMat[ni][nj] if calculation_mod == "DISTANCE" else durMat[ni][nj]
         except IndexError as e:
             print(f"[Erreur INDEX] i={i}, j={j}, ni={ni}, nj={nj}")
             print(f"Dimensions distMat: {len(distMat)}x{len(distMat[0])}")
