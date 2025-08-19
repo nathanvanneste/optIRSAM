@@ -6,10 +6,49 @@
 
 <form method="post" class="card p-4 shadow-sm">
   {% csrf_token %}
-  <div class="mb-3">
-    {{ form.as_p }}
-    {{ adresse_form.as_p }}
+ <div class="mb-3">
+    {{ form.prenom.label_tag }}
+    {{ form.prenom }}
+    {% if form.prenom.errors %}
+      <div class="text-danger">{{ form.prenom.errors }}</div>
+    {% endif %}
   </div>
+  
+  <div class="mb-3">
+    {{ form.nom.label_tag }}
+    {{ form.nom }}
+    {% if form.nom.errors %}
+      <div class="text-danger">{{ form.nom.errors }}</div>
+    {% endif %}
+  </div>
+  
+  <div class="mb-3">
+    {{ form.tuteur.label_tag }}
+    {{ form.tuteur }}
+    <datalist id="tuteur-options">
+      <option value="Parents"></option>
+      <option value="Père"></option>
+      <option value="Mère"></option>
+      <option value="Grand-parents"></option>
+      <option value="Oncle/Tante"></option>
+      <option value="Autre famille"></option>
+      <option value="Tuteur légal"></option>
+      <option value="Autre"></option>
+    </datalist>
+  </div>
+  
+  <div class="mb-3">
+    {{ form.etablissement.label_tag }}
+    {{ form.etablissement }}
+    {% if form.etablissement.errors %}
+      <div class="text-danger">{{ form.etablissement.errors }}</div>
+    {% endif %}
+  </div>
+
+
+
+    {{ adresse_form.as_p }}
+ 
   <div class="d-flex gap-2">
     <button type="button" class="btn btn-outline-secondary" onclick="geocoderAdresse()">Trouver coordonnées</button>
     <button type="submit" class="btn btn-primary">Modifier</button>

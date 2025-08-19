@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Enfant, Groupe, Adresse, Etablissement
+
+from .models import Enfant, Groupe, Etablissement
 from .forms import EnfantForm, AdresseForm, GroupeForm
 from .filters import EnfantFilter
+
 
 MODELE_PAR_TYPE = {
     'enfant' : Enfant,
@@ -12,8 +14,13 @@ MODELE_PAR_TYPE = {
 def donnees_list(request):
     filtre_enfant = EnfantFilter(request.GET, queryset=Enfant.objects.all())
     enfants_filtres = filtre_enfant.qs
+    context = {
+        "filtre": filtre_enfant,
+        "enfants": enfants_filtres,
+        "groupes": Groupe.objects.all(),
+        "etablissements": Etablissement.objects.all()
 
-    context = {"filtre" : filtre_enfant, "enfants" : enfants_filtres, "groupes" : Groupe.objects.all(), "etablissements" : Etablissement.objects.all()}
+    }
     return render(request, 'user/donnees_list.html', context)
 
 def infos(request, objet_type, objet_id):
@@ -75,12 +82,43 @@ def enfant_edit(request, enfant_id):
     })
 
 def enfant_remove(request, enfant_id):
-    enfant = Enfant.objects.get(pk = enfant_id)
-    adresse = enfant.adresse
-    enfant.delete()
-    if adresse:
-        adresse.delete()
+    #completer ici
     return redirect("donnees_list")
+
+def enfant_duplicate(request, enfant_id):
+    # Récupère l'enfant à dupliquer
+    enfant_original = get_object_or_404(Enfant, id=enfant_id)
+    
+    if request.method == 'POST':
+        enfant_form = EnfantForm(request.POST)
+        adresse_form = AdresseForm(request.POST)
+
+        if enfant_form.is_valid() and adresse_form.is_valid():
+            # Crée d'abord l'adresse
+            adresse = adresse_form.save()
+
+            # Crée l'enfant en associant l'adresse
+            enfant = enfant_form.save(commit=False)
+            enfant.adresse = adresse
+            enfant.save()
+
+            return redirect("donnees_list")
+    else:
+        # Prérempli les données avec celles de l'enfant original
+        initial_enfant_data = {
+            'nom': enfant_original.nom,
+            'prenom': enfant_original.prenom,
+            'etablissement': enfant_original.etablissement,
+            'tuteur': '',
+        }
+        enfant_form = EnfantForm(initial=initial_enfant_data)
+        adresse_form = AdresseForm()
+
+    return render(request, "user/enfant_duplicate.html", {
+        "form": enfant_form,
+        "adresse_form": adresse_form,
+        "enfant_original": enfant_original,
+    })
 
 def groupe_add(request):
     

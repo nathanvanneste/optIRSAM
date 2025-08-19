@@ -6,28 +6,88 @@ import requests
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 
-def get_matrices(coords, annotations=("distance","duration")):
+def get_matrices(coords, annotations=("distance","duration"), chunk_size=80):
     """
     Interroge OSRM pour obtenir les matrices des distances & durées.
-    Retourne le tuple (distMat, durMat) ou lève une exception.
+    Si la matrice est trop grosse, on découpe en plusieurs appels parallèles.
+    Retourne (distMat, durMat).
     """
-    # Communication avec l'API
-    base = "https://router.project-osrm.org/table/v1/driving/" # URL initial sans paramètre
-    url  = base + coords # URL final avec ajout des paramètres
-    resp = requests.get(url, params={"annotations": ",".join(annotations)}) # Appel à OSRM
-    resp.raise_for_status() # Résultat de l'appel
-    data = resp.json() # Récuperation du resultat
+    base = "https://router.project-osrm.org/table/v1/driving/"
+    coord_list = coords.split(";")
+    n = len(coord_list)
 
-    # Levée d'exception
-    if "distances" not in data or "durations" not in data:
-        raise ValueError("OSRM n'a pas renvoyé les matrices attendues.")
-    
-    # Création des matrices de distances et de durées renvoyées comme résultat
-    distMat = [[int(d) for d in row] for row in data["distances"]]
-    durMat  = [[int(d) for d in row] for row in data["durations"]]
+    # si petit nombre de points → appel direct
+    if n <= chunk_size:
+        url = base + coords
+        resp = requests.get(url, params={"annotations": ",".join(annotations)})
+        resp.raise_for_status()
+        data = resp.json()
+        if "distances" not in data or "durations" not in data:
+            raise ValueError("OSRM n'a pas renvoyé les matrices attendues.")
+        distMat = [[int(d) for d in row] for row in data["distances"]]
+        durMat  = [[int(d) for d in row] for row in data["durations"]]
+        return distMat, durMat
+
+    # sinon, on découpe par blocs
+    distMat = [[0]*n for _ in range(n)]
+    durMat  = [[0]*n for _ in range(n)]
+
+    # fonction pour requêter une sous-matrice entre deux chunks
+    def fetch(sources_indices, destinations_indices):
+        sources_coords = [coord_list[i] for i in sources_indices]
+        dest_coords = [coord_list[i] for i in destinations_indices]
+        
+        # Construction de l'URL avec sources et destinations
+        all_coords = sources_coords + dest_coords
+        url = base + ";".join(all_coords)
+        
+        # Paramètres pour spécifier sources et destinations
+        params = {
+            "annotations": ",".join(annotations),
+            "sources": ";".join(str(i) for i in range(len(sources_coords))),
+            "destinations": ";".join(str(i) for i in range(len(sources_coords), len(all_coords)))
+        }
+        
+        resp = requests.get(url, params=params)
+        resp.raise_for_status()
+        return sources_indices, destinations_indices, resp.json()
+
+    # Création des chunks d'indices
+    chunks = []
+    for i in range(0, n, chunk_size):
+        j = min(i + chunk_size, n)
+        chunks.append(list(range(i, j)))
+
+    futures = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        # Pour chaque paire de chunks (y compris chunk avec lui-même)
+        for i, chunk_sources in enumerate(chunks):
+            for j, chunk_destinations in enumerate(chunks):
+                # Éviter la duplication : on ne fait que les paires (i,j) avec i <= j
+                if i <= j:
+                    futures.append(executor.submit(fetch, chunk_sources, chunk_destinations))
+
+        for f in as_completed(futures):
+            sources_indices, dest_indices, data = f.result()
+            sub_dist = data["distances"]
+            sub_dur = data["durations"]
+
+            # Insertion dans la grosse matrice
+            for ii, source_idx in enumerate(sources_indices):
+                for jj, dest_idx in enumerate(dest_indices):
+                    distMat[source_idx][dest_idx] = int(sub_dist[ii][jj])
+                    durMat[source_idx][dest_idx] = int(sub_dur[ii][jj])
+                    
+                    # Si ce n'est pas la diagonale, on remplit aussi la partie symétrique
+                    if source_idx != dest_idx:
+                        distMat[dest_idx][source_idx] = int(sub_dist[ii][jj])
+                        durMat[dest_idx][source_idx] = int(sub_dur[ii][jj])
+
     return distMat, durMat
+
 
 def format_solution(manager, routing, solution, distMat, durMat, groupe, etablissement,
                     virtual_start, virtual_end):

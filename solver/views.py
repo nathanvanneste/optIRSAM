@@ -1,10 +1,13 @@
 import folium
+from folium.plugins import Fullscreen
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, FileResponse
 from .models import Run
 from .forms import RunForm
 from .services import *
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 
 def run_create(request):
     if request.method == 'POST':
@@ -29,6 +32,15 @@ def run_create(request):
         form = RunForm()
     return render(request, 'solver/parametrage.html',{'form' : form})
 
+def get_color(idx, total):
+    """
+    Génère une couleur hex distincte pour idx parmi total.
+    Utilise la colormap qualitative 'tab20'.
+    """
+    cmap = cm.get_cmap('tab20', total)
+    r, g, b, _ = cmap(idx % total)
+    return mcolors.to_hex((r, g, b))
+
 def run_detail(request, pk):
     run = get_object_or_404(Run, pk=pk)
 
@@ -44,9 +56,17 @@ def run_detail(request, pk):
     if etab_coords:
         center_lat, center_lon = etab_coords
     else:
-        center_lat, center_lon = 43.3, 5.4  # fallback (Marseille par ex)
+        center_lat, center_lon = 43.3, 5.4  # fallback (ex: Marseille)
 
     m = folium.Map(location=[center_lat, center_lon], zoom_start=11)
+
+    # Ajouter le bouton plein écran
+    Fullscreen(
+        position="topright",       # position du bouton
+        title="Voir en plein écran",
+        title_cancel="Quitter le plein écran",
+        force_separate_button=True
+    ).add_to(m)
 
     # Établissement
     folium.Marker(
@@ -56,19 +76,17 @@ def run_detail(request, pk):
         icon=folium.Icon(color="green", icon="home")
     ).add_to(m)
 
-    # Couleurs différentes pour chaque tournée
-    colors = ['red', 'blue', 'purple', 'orange', 'darkred', 'lightred', 
-              'beige', 'darkblue', 'darkgreen', 'cadetblue', 'darkpurple', 
-              'white', 'pink', 'lightblue', 'lightgreen', 'gray', 'black', 'lightgray']
+    # Nombre total de routes (pour générer les couleurs)
+    total_routes = len(data.get("routes", []))
 
     # Routes optimisées
     for route_idx, route in enumerate(data.get("routes", [])):
-        # Couleur pour cette tournée (cyclique si plus de tournées que de couleurs)
-        route_color = colors[route_idx % len(colors)]
-        
+        # Couleur unique pour cette tournée
+        route_color = get_color(route_idx, total_routes)
+
         points = []
         points_info = []  # Pour stocker les infos de chaque point
-        
+
         for i, name in enumerate(route["sequence"]):
             if name in ["Fin", "Fin (libre)"]:
                 continue
@@ -93,32 +111,33 @@ def run_detail(request, pk):
                         })
                         break
 
-        # Ligne de la tournée avec couleur spécifique
+        # Ligne de la tournée
         if points:
             folium.PolyLine(
-                points, 
-                color=route_color, 
-                weight=4, 
-                opacity=0.8,
-                popup=f"<b>Tournée {route_idx + 1}</b><br>Distance: {route['distance_totale']}<br>Durée: {route['duree_totale']}"
+                points,
+                color=route_color,
+                weight=4,
+                opacity=1.0,
+                popup=f"<b>Tournée {route_idx + 1}</b><br>"
+                      f"Distance: {route['distance_totale']}<br>"
+                      f"Durée: {route['duree_totale']}"
             ).add_to(m)
-            
-            # Marqueurs pour chaque point avec tooltips
+
+            # Marqueurs pour chaque point
             for point_info in points_info:
                 if point_info['type'] == 'etablissement':
-                    # L'établissement garde son marqueur maison vert
-                    continue  # Déjà ajouté plus haut
+                    continue  # déjà ajouté
                 else:
-                    # Marqueurs colorés pour les enfants
                     folium.CircleMarker(
                         location=point_info['coords'],
                         radius=6,
-                        popup=f"<b>{point_info['name']}</b><br>{point_info['adresse']}<br><i>Tournée {route_idx + 1}</i>",
+                        popup=f"<b>{point_info['name']}</b><br>{point_info['adresse']}<br>"
+                              f"<i>Tournée {route_idx + 1}</i>",
                         tooltip=point_info['name'],
                         color='white',
                         fillColor=route_color,
                         weight=2,
-                        fillOpacity=0.8
+                        fillOpacity=1.0
                     ).add_to(m)
 
     # Convertir carte → HTML

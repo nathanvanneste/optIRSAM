@@ -3,12 +3,21 @@ from .models import Enfant, Adresse, Etablissement, Groupe
 
 
 class EnfantForm(forms.ModelForm):
-    etablissement = forms.ModelChoiceField(queryset = Etablissement.objects.all(), label = "Etablissement")
+    etablissement = forms.ModelChoiceField(
+        queryset=Etablissement.objects.all(), 
+        label="Etablissement"
+    )
+
+    tuteur = forms.CharField(
+        label="Tuteur",
+        widget=forms.TextInput(attrs={'list': 'tuteur-options'})
+    )
+
     class Meta:
         model = Enfant
-        fields = ['prenom','nom','etablissement']
-        labels = {'prenom' : 'Prénom', 'nom' : 'Nom'}
-
+        fields = ['prenom', 'nom', 'tuteur', 'etablissement']
+        labels = {'prenom': 'Prénom', 'nom': 'Nom', 'tuteur': 'Tuteur'}
+        
 class AdresseForm(forms.ModelForm):
     class Meta:
         model = Adresse
@@ -28,5 +37,5 @@ class GroupeForm(forms.ModelForm):
     )
     class Meta:
         model = Groupe
-        fields = ['nom', 'enfants']
-        labels = {'nom': 'Nom du Groupe'}
+        fields = ['nom', 'etablissement', 'enfants']
+        labels = {'nom': 'Nom du Groupe', 'etablissement' : 'Etablissement'}

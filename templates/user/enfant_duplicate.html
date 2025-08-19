@@ -1,8 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Ajout d'un enfant{% endblock %}
+{% block title %}Duplication d'un enfant{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Ajout d'un nouvel enfant</h1>
+<h1 class="mb-4">Duplication de l'enfant : {{ enfant_original.prenom }} {{ enfant_original.nom }}</h1>
+
+<div class="alert alert-info mb-4">
+  <i class="fas fa-info-circle me-2"></i>
+  Les données ci-dessous sont pré-remplies à partir de l'enfant original. Modifiez les champs nécessaires avant de valider.
+</div>
 
 <form method="post" class="card p-4 shadow-sm">
   {% csrf_token %}
@@ -52,7 +57,7 @@
     <button type="button" class="btn btn-outline-secondary" onclick="geocoderAdresse()">
       Trouver coordonnées
     </button>
-    <button type="submit" class="btn btn-primary">Ajouter</button>
+    <button type="submit" class="btn btn-success">Dupliquer</button>
   </div>
 
   <div class="text-end">
@@ -82,7 +87,6 @@ function geocoderAdresse() {
       if (data?.length) {
         document.getElementById("id_latitude").value = data[0].lat;
         document.getElementById("id_longitude").value = data[0].lon;
-        alert("Coordonnées trouvées avec succès !");
       } else { 
         alert("Coordonnées non trouvées."); 
       }

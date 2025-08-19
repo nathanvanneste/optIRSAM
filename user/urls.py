@@ -11,4 +11,5 @@ urlpatterns = [
     path('modifier_groupe/<int:groupe_id>/', views.groupe_edit, name = 'edit_groupe'),
     path('supprimer_enfant/<int:enfant_id>/', views.enfant_remove, name = 'remove_enfant'),
     path('supprimer_groupe/<int:groupe_id>/', views.groupe_remove, name = 'remove_groupe'),
+    path('dupliquer_enfant/<int:enfant_id>/', views.enfant_duplicate, name = 'duplicate_enfant'),
 ]

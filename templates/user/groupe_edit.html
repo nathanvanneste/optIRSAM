@@ -11,30 +11,26 @@
     <label for="searchInput" class="form-label">Filtrer par nom/prénom :</label>
     <input type="text" id="searchInput" class="form-control" placeholder="Tapez un nom ou prénom...">
   </div>
-  <div class="col-md-6">
-    <label for="etablissementSelect" class="form-label">Filtrer par établissement :</label>
-    <select id="etablissementSelect" class="form-select">
-      <option value="">-- Tous les établissements --</option>
-      {% for etab in etablissements %}
-        <option value="{{ etab.id }}">{{ etab }}</option>
-      {% endfor %}
-    </select>
-  </div>
 </div>
 
 <form method="post" class="card p-4 shadow-sm">
   {% csrf_token %}
 
-
-<!-- Nom du groupe -->
-  <div class="mb-3">
-    {{ form.nom.label_tag }}
-    {{ form.nom }}
+  <!-- Nom + Etablissement sur la même ligne -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      {{ form.nom.label_tag }}
+      {{ form.nom }}
+    </div>
+    <div class="col-md-6">
+      {{ form.etablissement.label_tag }}
+      {{ form.etablissement }}
+    </div>
   </div>
 
-<!-- Liste des enfants avec scroll -->
+  <!-- Liste des enfants avec scroll -->
   <div class="mb-3">
-    {{ form.enfants.label_tag }} <!-- Va chercher l'attribut 'label' de l'objet enfants du groupe forme -->
+    {{ form.enfants.label_tag }}
     <div id="enfantsList" style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px;">
       {% for checkbox in form.enfants %}
         {% with etab_id=checkbox.data.value|get_etab_id %}
@@ -50,7 +46,7 @@
 
   <!-- Boutons -->
   <div class="mt-3 d-flex gap-2">
-    <button type="submit" class="btn btn-primary">Ajouter</button>
+    <button type="submit" class="btn btn-primary">Modifier</button>
     <a href="{% url 'donnees_list' %}" class="btn btn-light ms-auto">← Retour</a>
   </div>
 </form>
@@ -58,23 +54,25 @@
 <!-- Script de filtrage avec conservation des cases cochées -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const searchInput = document.getElementById("searchInput"); /* récupère le texte dans la barre de recherche */
-    const etabSelect = document.getElementById("etablissementSelect"); /* récupére l'etablissement sélectionné */ 
-    const enfantItems = document.querySelectorAll("#enfantsList .enfant-item"); /* récupère la liste de tous les enfants proposés */
-    const selectedIds = new Set(); /* set pour mémoriser les ids cochés */
+    const searchInput = document.getElementById("searchInput");
+    const etabSelect = document.getElementById("id_etablissement");  // CORRIGÉ: même ID que groupe_add
+    const enfantItems = document.querySelectorAll("#enfantsList .enfant-item");
+    let selectedIds = new Set();
+    let lastEtab = ""; // pour savoir si on vient de "aucun établissement"
 
+    // NOUVEAU: Initialiser selectedIds avec les enfants déjà cochés (pour l'édition)
     enfantItems.forEach(item => {
-    const checkbox = item.querySelector('input[type="checkbox"]');
-    if (checkbox && checkbox.checked) {
-        selectedIds.add(checkbox.value);
-    }
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox && checkbox.checked) {
+            selectedIds.add(checkbox.value);
+        }
     });
 
     // Sauvegarder l'état quand on coche/décoche
     enfantItems.forEach(item => {
-        const checkbox = item.querySelector('input[type="checkbox"]'); /* On regarde si il y a un checkbox associé à chauqe enfant */
+        const checkbox = item.querySelector('input[type="checkbox"]');
         if (!checkbox) return;
-        checkbox.addEventListener("change", function() { /* On regarde si c'est coché/décoché */
+        checkbox.addEventListener("change", function() {
             if (checkbox.checked) {
                 selectedIds.add(checkbox.value);
             } else {
@@ -83,14 +81,30 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // Fonction de filtrage combiné nom + établissement
-    function filterEnfants() {
-        const searchTerm = searchInput.value.toLowerCase(); /* texte saisi mis en minuscule */
-        const selectedEtab = etabSelect.value; /* établissement séléctionné */
+    // Fonction de filtrage combiné nom + établissement choisi
+    function filterEnfants(resetOnEtabChange = false, preserveForNewEtab = false) {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedEtab = etabSelect.value;
+
+        // Gestion de la réinitialisation selon le scénario
+        if (resetOnEtabChange) {
+            if (preserveForNewEtab && selectedEtab) {
+                // On garde uniquement les enfants cochés appartenant au nouvel établissement
+                selectedIds = new Set(
+                    Array.from(selectedIds).filter(id => {
+                        const item = document.querySelector(`#enfantsList input[value="${id}"]`)?.closest(".enfant-item");
+                        return item && item.getAttribute("data-etab") === selectedEtab;
+                    })
+                );
+            } else {
+                // Sinon, on vide tout
+                selectedIds.clear();
+            }
+        }
 
         enfantItems.forEach(item => {
             const label = item.querySelector("label").textContent.toLowerCase();
-            const etabId = item.getAttribute("data-etab"); /* ici j'ai des doutes */
+            const etabId = item.getAttribute("data-etab");
             const checkbox = item.querySelector('input[type="checkbox"]');
 
             const matchSearch = label.includes(searchTerm);
@@ -98,15 +112,27 @@ document.addEventListener("DOMContentLoaded", function() {
 
             item.style.display = (matchSearch && matchEtab) ? "flex" : "none";
 
-            // Restaurer état coché
             if (checkbox) {
                 checkbox.checked = selectedIds.has(checkbox.value);
             }
         });
+
+        lastEtab = selectedEtab; // mémoriser l'état pour comparaison future
     }
 
-    searchInput.addEventListener("input", filterEnfants);
-    etabSelect.addEventListener("change", filterEnfants);
+    // Recherche → conserve la sélection
+    searchInput.addEventListener("input", () => filterEnfants(false));
+
+    // Changement d'établissement
+    etabSelect.addEventListener("change", () => {
+        const selectedEtab = etabSelect.value;
+        const preserve = !lastEtab && selectedEtab; 
+        filterEnfants(true, preserve);
+    });
+
+    // Premier filtrage (IMPORTANT: initialise lastEtab avec la valeur actuelle)
+    lastEtab = etabSelect.value;
+    filterEnfants(false);
 });
 </script>
 {% endblock %}
