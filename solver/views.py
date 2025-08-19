@@ -14,6 +14,7 @@ def run_create(request):
         form = RunForm(request.POST)
         if form.is_valid():
             run = form.save(commit = False)
+            run.etablissement = run.groupe.etablissement
             run.status = 'RUNNING'
             run.save()
             nb_enfants = run.groupe.enfants.count()

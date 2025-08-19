@@ -6,14 +6,24 @@
 
 <section class="card mb-4">
   <div class="card-body">
-    <h2 class="h5 mb-3">Filtres sur les usagers</h2>
-    <form method="get" class="row g-3">
-      {{ filtre.form.as_p }}
-      <div>
-        <button type="submit" class="btn btn-primary">Filtrer</button>
-        <a href="{% url 'donnees_list' %}" class="btn btn-secondary">Effacer</a>
+    <div class="row g-3">
+      <!-- champ texte à gauche -->
+      <div class="col-md-6">
+        <label for="searchUsager" class="form-label">Filtrer par nom/prénom :</label>
+        <input type="text" id="searchUsager" class="form-control" placeholder="Tapez un nom ou prénom...">
       </div>
-    </form>
+
+      <!-- select établissement à droite -->
+      <div class="col-md-6">
+        <label for="etabSelect" class="form-label">Filtrer par établissement :</label>
+        <select id="etabSelect" class="form-select">
+          <option value="">Tous les établissements</option>
+          {% for etablissement in etablissements %}
+            <option value="{{ etablissement.nom|lower }}">{{ etablissement.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -26,23 +36,25 @@
           <h2 class="h5 mb-0">Usagers</h2>
           <a href="{% url 'add_enfant' %}" class="btn btn-success btn-sm">Ajouter usager</a>
         </div>
-        <ul class="list-group" style="max-height: 300px; overflow-y: auto;">
+        <ul id="usagersList" class="list-group" style="max-height: 500px; overflow-y: auto;">
           {% for enfant in enfants %}
-          <li class="list-group-item">
-            <div class="d-flex justify-content-between align-items-start">
-              <div class="me-2">
-                <span class="fw-medium">{{ enfant }}</span>
-              </div>
-              <div class="btn-group-vertical btn-group-sm" style="min-width: 100px;">
+          <li class="list-group-item"
+            data-nom="{{ enfant.nom|lower }}"
+            data-prenom="{{ enfant.prenom|lower }}"
+            data-etablissement="{{ enfant.etablissement.nom|default_if_none:''|lower }}">
+            <div class="mb-2">
+              <span class="fw-medium">{{ enfant }}</span>
+            </div>
+              <div class="btn-group" style="min-width: 100px;">
                 <a href="{% url 'infos' 'enfant' enfant.id %}" class="btn btn-outline-primary btn-sm">+ d'infos</a>
                 <a href="{% url 'edit_enfant' enfant.id %}" class="btn btn-outline-secondary btn-sm">Modifier</a>
-                <a href="{% url 'duplicate_enfant' enfant.id %}" class="btn btn-outline-dark btn-sm">Dupliquer</a>
+                <a href="{% url 'duplicate_enfant' enfant.id %}" class="btn btn-outline-secondary btn-sm">Dupliquer</a>
                 <a href="{% url 'remove_enfant' enfant.id %}" class="btn btn-outline-danger btn-sm"
                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ enfant.prenom }} {{ enfant.nom }} ?');">
                    Supprimer
                 </a>
               </div>
-            </div>
+
           </li>
           {% empty %}
           <li class="list-group-item text-muted">Aucun usager</li>
@@ -60,7 +72,7 @@
           <h2 class="h5 mb-0">Groupes</h2>
           <a href="{% url 'add_groupe' %}" class="btn btn-success btn-sm">Ajouter groupe</a>
         </div>
-        <ul class="list-group" style="max-height: 300px; overflow-y: auto;">
+        <ul class="list-group" style="max-height: 500px; overflow-y: auto;">
           {% for groupe in groupes %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>{{ groupe }}</span>
@@ -86,7 +98,7 @@
     <div class="card h-100">
       <div class="card-body">
         <h2 class="h5 mb-3">Établissements</h2>
-        <ul class="list-group" style="max-height: 300px; overflow-y: auto;">
+        <ul class="list-group" style="max-height: 500px; overflow-y: auto;">
           {% for etablissement in etablissements %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>{{ etablissement }}</span>
@@ -99,5 +111,39 @@
       </div>
     </div>
   </section>
+
+  <div class="text-end">
+    <a href="{% url 'parametrage' %}" class="btn btn-outline-dark btn-sm">Lancer une résolution</a>
+  </div>
 </div>
+
+<script>
+function filterUsagers() {
+  const search = document.getElementById("searchUsager").value.toLowerCase();
+  const etabFilter = document.getElementById("etabSelect").value.toLowerCase();
+  const items = document.querySelectorAll("#usagersList li");
+
+  items.forEach(li => {
+    const nom = li.dataset.nom || "";
+    const prenom = li.dataset.prenom || "";
+    const etab = li.dataset.etablissement || "";
+
+    const matchText = nom.includes(search) || prenom.includes(search) || etab.includes(search);
+    const matchEtab = !etabFilter || etab === etabFilter;
+
+    if (matchText && matchEtab) {
+      li.style.display = "";
+    } else {
+      li.style.display = "none";
+    }
+  });
+}
+
+document.getElementById("searchUsager").addEventListener("input", filterUsagers);
+document.getElementById("etabSelect").addEventListener("change", filterUsagers);
+
+// lancer une première fois au chargement
+filterUsagers();
+</script>
+
 {% endblock %}
