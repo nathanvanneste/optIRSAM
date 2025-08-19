@@ -9,6 +9,10 @@ from .services import *
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
+def run_list(request):
+    runs = Run.objects.all().order_by("-id")  # les plus récentes d'abord
+    return render(request, "solver/run_list.html", {"runs": runs})
+
 def run_create(request):
     if request.method == 'POST':
         form = RunForm(request.POST)
