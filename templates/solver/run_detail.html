@@ -2,21 +2,21 @@
 {% block title %}Résultats de la résolution{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Détail de la Run</h1>
+<h1 class="mb-4">Résolution terminée</h1>
 
 <div class="row g-4">
   <div class="col-12 col-lg-6">
     <div class="card h-100">
       <div class="card-body">
         {% if run.status == "SUCCESS" %}
-          <p><strong>Détails de la résolution:</strong></p>
           <p><strong>Groupe:</strong> {{ run.groupe.nom }}</p>
+          <p><strong>Etablissement:</strong> {{ run.etablissement }}</p>
+          <p><strong>Paramètre de coût:</strong> {{ run.calculation_mod }}</p>
+          <p><strong>Types de trajets:</strong> {{ run.mode }}</p>
           <p><strong>Date de création :</strong> {{ run.created_at }}</p>
-          <!-- <p><strong>Status :</strong> {{ run.status }}</p> -->
-          <!-- <p><strong>Capacité :</strong> {{ run.capacity }}</p> -->
           <p>Une solution a été trouvée. Voici le résultat proposé:</p>
           <details>
-            <summary class="mb-2">Résultat brut (JSON)</summary>
+            <summary class="mb-2"><strong>Résultat brut (JSON)</strong></summary>
             <pre class="bg-light p-3 rounded small">{{ run.result_json }}</pre>
           </details>
           <a href="{% url 'download_excel' run.pk %}" class="btn btn-primary mt-2">Télécharger l'Excel</a>
@@ -43,5 +43,6 @@
 
 <div class="mt-3">
   <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
+  <button type="button" class="btn btn-light" onclick="history.back()">← Retour</button>
 </div>
 {% endblock %}

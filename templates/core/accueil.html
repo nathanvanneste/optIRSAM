@@ -2,7 +2,7 @@
 {% block title %}Accueil{% endblock %}
 
 {% block content %}
-<div class="text-center">
+<div class="d-flex flex-column justify-content-center align-items-center min-vh-100 text-center">
   <h1 class="mb-4">Que voulez-vous faire ?</h1>
   <div class="row justify-content-center g-4">
     <div class="col-12 col-md-5">
@@ -20,6 +20,15 @@
           <h2 class="h5">Lancer une résolution</h2>
           <p class="text-muted">Définir les paramètres de résolution et afficher le résultat.</p>
           <a href="{% url 'parametrage' %}" class="btn btn-primary">Lancer une résolution</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-5">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="h5">Historique</h2>
+          <p class="text-muted">Les dernières résolutions sont enregistrées, il est possible de les consulter.</p>
+          <a href="{% url 'run_list' %}" class="btn btn-primary">Consulter les dernières résolutions</a>
         </div>
       </div>
     </div>

@@ -9,10 +9,9 @@
   {{ form.as_p }}
   <div class="mt-3">
     <button type="submit" class="btn btn-primary">Lancer la résolution</button>
-    <a href="{% url 'donnees_list' %}" class="btn btn-outline-secondary">← Retour</a>
-     <div class="text-end">
-    <a href="{% url 'run_list' %}" class="btn btn-outline-dark btn-sm">Dernières résolutions effectuées</a>
-  </div>
+    <div class="text-end">
+      <button type="button" class="btn btn-light" onclick="history.back()">← Retour</button>
+    </div>
   </div>
 </form>
 {% endblock %}

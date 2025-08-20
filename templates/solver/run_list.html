@@ -6,47 +6,53 @@
 
 <section class="card mb-4">
   <div class="card-body">
-    <table class="table table-hover align-middle">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Groupe</th>
-          <th>Établissement</th>
-          <th>Statut</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for run in runs %}
-        <tr>
-          <td>{{ run.id }}</td>
-          <td>{{ run.groupe.nom }}</td>
-          <td>{{ run.etablissement.nom }}</td>
-          <td>
-            {% if run.status == "SUCCESS" %}
-              <span class="badge bg-success">Succès</span>
-            {% elif run.status == "INFEASIBLE" %}
-              <span class="badge bg-danger">Infeasible</span>
-            {% elif run.status == "RUNNING" %}
-              <span class="badge bg-warning text-dark">En cours</span>
-            {% else %}
-              <span class="badge bg-secondary">{{ run.status }}</span>
-            {% endif %}
-          </td>
-          <td>{{ run.created_at|date:"d/m/Y H:i" }}</td>
-          <td>
-            <a href="{% url 'run_detail' run.pk %}" class="btn btn-outline-primary btn-sm">Voir</a>
-            <a href="{% url 'download_excel' run.pk %}" class="btn btn-outline-success btn-sm">Excel</a>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="6" class="text-muted">Aucune run effectuée</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div style="max-height:650px; overflow-y:auto;">
+      <table class="table table-hover align-middle">
+        <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+          <tr>
+            <th>ID</th>
+            <th>Groupe</th>
+            <th>Établissement</th>
+            <th>Statut</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in runs %}
+          <tr>
+            <td>{{ run.id }}</td>
+            <td>{{ run.groupe.nom }}</td>
+            <td>{{ run.etablissement.nom }}</td>
+            <td>
+              {% if run.status == "SUCCESS" %}
+                <span class="badge bg-success">Succès</span>
+              {% elif run.status == "FAILURE" %}
+                <span class="badge bg-danger">Echec</span>
+              {% elif run.status == "PENDING" %}
+                <span class="badge bg-warning text-dark">En cours</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ run.status }}</span>
+              {% endif %}
+            </td>
+            <td>{{ run.created_at|date:"d/m/Y H:i" }}</td>
+            <td>
+              <a href="{% url 'run_detail' run.pk %}" class="btn btn-outline-primary btn-sm">Voir</a>
+              <a href="{% url 'download_excel' run.pk %}" class="btn btn-outline-success btn-sm">Excel</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-muted">Pas encore de résolution effectuée/td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer text-end">
+    <button type="button" class="btn btn-light" onclick="history.back()">← Retour</button>
   </div>
 </section>
+
 {% endblock %}
