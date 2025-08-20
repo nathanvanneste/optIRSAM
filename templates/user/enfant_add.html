@@ -4,6 +4,7 @@
 {% block content %}
 <h1 class="mb-4">Ajout d'un nouvel enfant</h1>
 
+<!-- Formulaire d'ajout d'un enfant détaillé champ par champ -->
 <form method="post" class="card p-4 shadow-sm">
   {% csrf_token %}
   
@@ -26,6 +27,7 @@
   <div class="mb-3">
     {{ form.tuteur.label_tag }}
     {{ form.tuteur }}
+    <!-- Suggestions de remplissage du tuteur pour gagner du temps -->
     <datalist id="tuteur-options">
       <option value="Parents"></option>
       <option value="Père"></option>
@@ -46,6 +48,7 @@
     {% endif %}
   </div>
 
+  <!-- Pas besoin d'ajouter des options sur des champs d'adresses donc deploiement du form classique -->
   {{ adresse_form.as_p }}
   
   <div class="d-flex gap-2 mb-3">
@@ -62,6 +65,8 @@
 
 {% endblock %}
 
+
+<!-- L'appel à l'API pour les coordonnées se fait sur le front en JS ce qui est plus pratique (néanmoins, pas sûr que ce soit une bonne pratique) -->
 {% block extra_js %}
 <script>
 function geocoderAdresse() {

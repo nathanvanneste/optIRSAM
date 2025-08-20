@@ -3,12 +3,13 @@
 
 {% block content %}
 <h1 class="mb-4">Historique des runs</h1>
-
+<!-- Affichage des runs en BD -->
 <section class="card mb-4">
   <div class="card-body">
     <div style="max-height:650px; overflow-y:auto;">
       <table class="table table-hover align-middle">
         <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+          <!-- Attributs qu'on affiche -->
           <tr>
             <th>ID</th>
             <th>Groupe</th>
@@ -20,6 +21,7 @@
         </thead>
         <tbody>
           {% for run in runs %}
+          <!-- Derniers runs lancés -->
           <tr>
             <td>{{ run.id }}</td>
             <td>{{ run.groupe.nom }}</td>
@@ -37,7 +39,9 @@
             </td>
             <td>{{ run.created_at|date:"d/m/Y H:i" }}</td>
             <td>
+              <!-- Redirection vers run_detail -->
               <a href="{% url 'run_detail' run.pk %}" class="btn btn-outline-primary btn-sm">Voir</a>
+              <!-- Lancement du telechargement de l'excel associé -->
               <a href="{% url 'download_excel' run.pk %}" class="btn btn-outline-success btn-sm">Excel</a>
             </td>
           </tr>

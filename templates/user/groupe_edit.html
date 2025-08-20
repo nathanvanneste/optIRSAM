@@ -55,12 +55,12 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.getElementById("searchInput");
-    const etabSelect = document.getElementById("id_etablissement");  // CORRIGÉ: même ID que groupe_add
+    const etabSelect = document.getElementById("id_etablissement"); 
     const enfantItems = document.querySelectorAll("#enfantsList .enfant-item");
     let selectedIds = new Set();
     let lastEtab = ""; // pour savoir si on vient de "aucun établissement"
 
-    // NOUVEAU: Initialiser selectedIds avec les enfants déjà cochés (pour l'édition)
+    //Initialiser selectedIds avec les enfants déjà cochés (pour l'édition)
     enfantItems.forEach(item => {
         const checkbox = item.querySelector('input[type="checkbox"]');
         if (checkbox && checkbox.checked) {
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function() {
         lastEtab = selectedEtab; // mémoriser l'état pour comparaison future
     }
 
-    // Recherche → conserve la sélection
+    // Recherche => conserve la sélection
     searchInput.addEventListener("input", () => filterEnfants(false));
 
     // Changement d'établissement

@@ -2,13 +2,14 @@ import folium
 from folium.plugins import Fullscreen
 import json
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, FileResponse
+from django.http import FileResponse
 from .models import Run
 from .forms import RunForm
 from .services import *
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
+# Affiche les runs
 def run_list(request):
     runs = Run.objects.all().order_by("-id")  # les plus récentes d'abord
     return render(request, "solver/run_list.html", {"runs": runs})
@@ -18,25 +19,27 @@ def run_create(request):
         form = RunForm(request.POST)
         if form.is_valid():
             run = form.save(commit = False)
-            run.etablissement = run.groupe.etablissement
-            run.status = 'RUNNING'
-            run.save()
+            run.etablissement = run.groupe.etablissement # On récupère l'établissement en fonction du groupe
+            run.status = 'RUNNING' # Changement du statut
+            run.save() # Le save pour pouvoir afficher le statut RUNNING
             nb_enfants = run.groupe.enfants.count()
+            # On crée les listes de capacités en fonction des vehicules décrits
             if run.vehicules == 'VOITURES':
                 capacities = [4]*nb_enfants
             elif run.vehicules == 'VANS':
                 capacities = [8]*nb_enfants
             else:
                 capacities = [4,8]*nb_enfants
-            result_python = solve_vrp(run.groupe, run.etablissement, capacities, run.time_limit, run.calculation_mod, run.mode)
+            result_python = solve_vrp(run.groupe, run.etablissement, capacities, run.time_limit, run.calculation_mod, run.mode) # Lancement du solver avec tous les paramètres
             run.status = result_python["status"]
-            run.result_json = json.dumps(result_python, indent = 2, ensure_ascii = False)
+            run.result_json = json.dumps(result_python, indent = 2, ensure_ascii = False) # On  met en JSON le résultat
             run.save()
             return redirect('run_detail', pk = run.pk)
     else:
         form = RunForm()
     return render(request, 'solver/parametrage.html',{'form' : form})
 
+# Permet de récupérer une couleur pour chaque chemin à tracer
 def get_color(idx, total):
     """
     Génère une couleur hex distincte pour idx parmi total.
@@ -46,6 +49,7 @@ def get_color(idx, total):
     r, g, b, _ = cmap(idx % total)
     return mcolors.to_hex((r, g, b))
 
+# Permet de créer la carte
 def run_detail(request, pk):
     run = get_object_or_404(Run, pk=pk)
 
@@ -61,7 +65,7 @@ def run_detail(request, pk):
     if etab_coords:
         center_lat, center_lon = etab_coords
     else:
-        center_lat, center_lon = 43.3, 5.4  # fallback (ex: Marseille)
+        center_lat, center_lon = 43.3, 5.4  
 
     m = folium.Map(location=[center_lat, center_lon], zoom_start=11)
 
@@ -103,7 +107,7 @@ def run_detail(request, pk):
                     'type': 'etablissement'
                 })
             else:
-                # Nom = "Prénom Nom" → retrouver l'enfant
+                # Nom = "Prénom Nom" => retrouver l'enfant
                 for e in enfants:
                     if f"{e.prenom} {e.nom}" == name:
                         enfant_coords = (e.adresse.latitude, e.adresse.longitude)
@@ -145,7 +149,7 @@ def run_detail(request, pk):
                         fillOpacity=1.0
                     ).add_to(m)
 
-    # Convertir carte → HTML
+    # Convertir la carte en HTML
     map_html = m._repr_html_()
 
     return render(request, 'solver/run_detail.html', {

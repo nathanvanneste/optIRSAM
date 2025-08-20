@@ -19,6 +19,7 @@ from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Premier point de croisement des urls qui sont redirigées vers la bonne application
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('core.urls')),
@@ -26,5 +27,6 @@ urlpatterns = [
     path('solver/',include('solver.urls')),
 ]
 
+# Sert pour les fichiers statiques en phase de test, il va falloir modifier ça en production et gérer les fichiers avec un serveur Apache je pense
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root = settings.BASE_DIR / "static")

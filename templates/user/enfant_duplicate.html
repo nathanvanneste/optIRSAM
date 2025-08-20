@@ -2,12 +2,9 @@
 {% block title %}Duplication d'un enfant{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Duplication de l'enfant : {{ enfant_original.prenom }} {{ enfant_original.nom }}</h1>
 
-<div class="alert alert-info mb-4">
-  <i class="fas fa-info-circle me-2"></i>
-  Les données ci-dessous sont pré-remplies à partir de l'enfant original. Modifiez les champs nécessaires avant de valider.
-</div>
+<!-- Exactement la même page que enfant_add sauf que les champs nom, prénom et établissement sont déjà rempli car ils ne bougent pas d'un parent à un autre -->
+<h1 class="mb-4">Duplication de l'enfant : {{ enfant_original.prenom }} {{ enfant_original.nom }}</h1>
 
 <form method="post" class="card p-4 shadow-sm">
   {% csrf_token %}

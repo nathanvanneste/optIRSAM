@@ -7,13 +7,13 @@
 <section class="card mb-4">
   <div class="card-body">
     <div class="row g-3">
-      <!-- champ texte à gauche -->
+      <!-- champ texte à gauche pour filtrer -->
       <div class="col-md-6">
         <label for="searchUsager" class="form-label">Filtrer par nom/prénom :</label>
         <input type="text" id="searchUsager" class="form-control" placeholder="Tapez un nom ou prénom...">
       </div>
 
-      <!-- select établissement à droite -->
+      <!-- select établissement à droite pour filtrer également -->
       <div class="col-md-6">
         <label for="etabSelect" class="form-label">Filtrer par établissement :</label>
         <select id="etabSelect" class="form-select">
@@ -34,6 +34,7 @@
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-3">
           <h2 class="h5 mb-0">Usagers</h2>
+          <!-- Bouton d'ajout d'usager -->
           <a href="{% url 'add_enfant' %}" class="btn btn-success btn-sm">Ajouter usager</a>
         </div>
         <ul id="usagersList" class="list-group" style="max-height: 500px; overflow-y: auto;">
@@ -46,9 +47,13 @@
               <span class="fw-medium">{{ enfant }}</span>
             </div>
               <div class="btn-group" style="min-width: 100px;">
+                <!-- Bouton d'accès aux informations -->
                 <a href="{% url 'infos' 'enfant' enfant.id %}" class="btn btn-outline-secondary btn-sm">+ d'infos</a>
+                <!-- Bouton de modification -->
                 <a href="{% url 'edit_enfant' enfant.id %}" class="btn btn-outline-secondary btn-sm">Modifier</a>
+                <!-- Bouton de duplication -->
                 <a href="{% url 'duplicate_enfant' enfant.id %}" class="btn btn-outline-secondary btn-sm">Dupliquer</a>
+                <!-- Bouton de suppression -->
                 <a href="{% url 'remove_enfant' enfant.id %}" class="btn btn-outline-danger btn-sm"
                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ enfant.prenom }} {{ enfant.nom }} ?');">
                    Supprimer
@@ -77,8 +82,11 @@
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>{{ groupe }}</span>
             <div class="btn-group">
+              <!-- Bouton d'accès aux informations -->
               <a href="{% url 'infos' 'groupe' groupe.id %}" class="btn btn-outline-secondary btn-sm">+ d'infos</a>
+              <!-- Bouton de modification -->
               <a href="{% url 'edit_groupe' groupe.id %}" class="btn btn-outline-secondary btn-sm">Modifier</a>
+              <!-- Bouton de suppression -->
               <a href="{% url 'remove_groupe' groupe.id %}" class="btn btn-outline-danger btn-sm"
                  onclick="return confirm('Êtes-vous sûr de vouloir supprimer {{ groupe.nom }} ?');">
                  Supprimer
@@ -102,6 +110,7 @@
           {% for etablissement in etablissements %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>{{ etablissement }}</span>
+            <!-- Bouton d'accès aux informations -->
             <a href="{% url 'infos' 'etablissement' etablissement.id %}" class="btn btn-outline-secondary btn-sm">+ d'infos</a>
           </li>
           {% empty %}
@@ -112,12 +121,13 @@
     </div>
   </section>
 
-  <!-- Redirection resolution -->
+  <!-- Redirection vers la page de résolution -->
   <div class="text-end">
     <a href="{% url 'parametrage' %}" class="btn btn-primary btn-sm">Lancer une résolution</a>
   </div>
 </div>
 
+<!-- Filtrage dynamique des usagers -->
 <script>
 function filterUsagers() {
   const search = document.getElementById("searchUsager").value.toLowerCase();

@@ -1,14 +1,17 @@
 {% load static %}
+<!-- Template de base qui sera étendu par d'autres templates ensuite => permet une harmonie et de la réutilisation de code -->
 <!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>{% block title %}optIRSAM{% endblock %}</title>
+    <!-- Icône dans la barre de recherche -->
     <link rel="shortcut icon" href="{% static 'images/logo_picto.png' %}"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
     {% block extra_head %}{% endblock %}
   </head>
+  <!-- Logo en haut à gauche faisant office de bouton d'accueil -->
   <body class="bg-light">
     <header class="border-bottom bg-white">
       <nav class="navbar navbar-expand-lg">
@@ -17,9 +20,11 @@
             <img src="{% static 'images/logo_IRSAM.png' %}" alt="logo" style="height:36px"/>
             <span class="fw-semibold">optIRSAM</span>
           </a>
+          <!-- Permet pour les plus petits écran de déplier le menu avec un bouton hamburger -->
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
             <span class="navbar-toggler-icon"></span>
           </button>
+          <!-- Trois boutons de navigation principaux => Accueil/Données/Résolutions permettent de parcourir toute l'appli rapidement -->
           <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav ms-auto">
               <li class="nav-item"><a class="nav-link" href="{% url 'accueil' %}">Accueil</a></li>
@@ -34,7 +39,7 @@
     <main class="container py-4">
       {% block content %}{% endblock %}
     </main>
-
+    <!-- Charge les templates bootstrap qui servent à la mise en page (CSS) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
   </body>

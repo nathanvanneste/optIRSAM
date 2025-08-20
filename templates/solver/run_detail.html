@@ -8,7 +8,9 @@
   <div class="col-12 col-lg-6">
     <div class="card h-100">
       <div class="card-body">
+        <!-- On distingue 2 cas, soit on a trouvé une solution soit non -->
         {% if run.status == "SUCCESS" %}
+        <!-- Affichage des paramètres de la résolution => apporte de la visibilité sur la lecture de l'historique -->
           <p><strong>Groupe:</strong> {{ run.groupe.nom }}</p>
           <p><strong>Etablissement:</strong> {{ run.etablissement }}</p>
           <p><strong>Paramètre de coût:</strong> {{ run.calculation_mod }}</p>
@@ -16,10 +18,13 @@
           <p><strong>Date de création :</strong> {{ run.created_at }}</p>
           <p>Une solution a été trouvée. Voici le résultat proposé:</p>
           <details>
+          <!-- Donnees JSON brut, peut servir à débuguer ou bien pour réutilisation dans d'autres contexte, j'ai préféré donc les laisser -->
             <summary class="mb-2"><strong>Résultat brut (JSON)</strong></summary>
             <pre class="bg-light p-3 rounded small">{{ run.result_json }}</pre>
           </details>
+          <!-- Bouton de téléchargement de l'excel -->
           <a href="{% url 'download_excel' run.pk %}" class="btn btn-primary mt-2">Télécharger l'Excel</a>
+        <!-- Si le statut est à FALSE alors on indique que nous n'avons pas trouvé de solution -->
         {% else %}
           <p>Malheureusement, nous n'avons pas trouvé de solution. Veuillez réessayer avec d'autres paramètres.</p> 
         {% endif %}
@@ -27,6 +32,7 @@
     </div>
   </div>
 
+  <!-- Affichage de la map pour avoir un apperçu de ce qui est proposé -->
   <div class="col-12 col-lg-6">
     <div class="card h-100">
       <div class="card-body">
@@ -41,6 +47,7 @@
   </div>
 </div>
 
+<!-- Boutons de redirection classique -->
 <div class="mt-3">
   <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Accueil</a>
   <button type="button" class="btn btn-light" onclick="history.back()">← Retour</button>

@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+# URLs de redirection si l'URL entrant contient solver
 urlpatterns = [
     path('', views.run_create, name = 'parametrage'),
     path("run/<int:pk>/", views.run_detail, name='run_detail'),
