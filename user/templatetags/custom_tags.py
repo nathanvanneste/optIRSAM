@@ -1,6 +1,9 @@
 from django import template
 from user.models import Enfant
 
+# Permet de récuperer un etablissement à partir de l'id d'un enfant, ce qui est beaucoup plus simple de le faire là plutôt que dans le template où on 
+# a pas un objet enfant directement mais juste un id => necessité donc de passer par un guetteur
+
 register = template.Library()
 
 @register.filter

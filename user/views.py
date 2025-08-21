@@ -2,34 +2,32 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from .models import Enfant, Groupe, Etablissement
 from .forms import EnfantForm, AdresseForm, GroupeForm
-from .filters import EnfantFilter
 
-
+# Sert dans le contrôleur infos pour que la templates reconnaisse les corespondances
 MODELE_PAR_TYPE = {
     'enfant' : Enfant,
     'etablissement' : Etablissement,
     'groupe' : Groupe,
 }
 
+# Donne du contexte dans la requête pour pouvoir passer et afficher les enfants, groupe, etablissement ect... Le filtrage se fait en JS sur la template (plus puissant)
 def donnees_list(request):
-    filtre_enfant = EnfantFilter(request.GET, queryset=Enfant.objects.all())
-    enfants_filtres = filtre_enfant.qs
     context = {
-        "filtre": filtre_enfant,
-        "enfants": enfants_filtres,
+        "enfants": Enfant.objects.all(),
         "groupes": Groupe.objects.all(),
         "etablissements": Etablissement.objects.all()
 
     }
     return render(request, 'user/donnees_list.html', context)
 
+# Reconnait le type d'objet et le passe à la template qui ajustera l'affichage en fonction du type 
 def infos(request, objet_type, objet_id):
     modele = MODELE_PAR_TYPE.get(objet_type.lower())
     objet = get_object_or_404(modele, id=objet_id)
     context = {"objet" : objet, "type" : objet_type.lower()}
     return render(request, "user/infos.html", context)
 
-
+# Méthode d'ajout d'enfant qui agit avec le formulaire
 def enfant_add(request):
     if request.method == 'POST':
         enfant_form = EnfantForm(request.POST)
@@ -54,6 +52,7 @@ def enfant_add(request):
         "adresse_form": adresse_form,
     })
 
+# Méthode d'édition d'enfant
 def enfant_edit(request, enfant_id):
     enfant = Enfant.objects.get(pk = enfant_id)
     adresse = enfant.adresse
@@ -81,10 +80,23 @@ def enfant_edit(request, enfant_id):
         "adresse_form": adresse_form,
     })
 
+# Méthode pour la suppression des enfants
 def enfant_remove(request, enfant_id):
-    #completer ici
+    enfant = get_object_or_404(Enfant, id=enfant_id)
+
+    # Sauvegarde l'adresse associée
+    adresse = enfant.adresse  
+
+    # Supprime d'abord l'enfant
+    enfant.delete()
+
+    # Puis supprime l'adresse si elle existe et qu'elle n'est plus liée à d'autres enfants
+    if adresse and not adresse.enfants.exists():
+        adresse.delete()
+
     return redirect("donnees_list")
 
+# Permet de créer un nouvel enfant en changeant le tutueur
 def enfant_duplicate(request, enfant_id):
     # Récupère l'enfant à dupliquer
     enfant_original = get_object_or_404(Enfant, id=enfant_id)
@@ -120,6 +132,7 @@ def enfant_duplicate(request, enfant_id):
         "enfant_original": enfant_original,
     })
 
+# Méthode d'ajout d'un groupe 
 def groupe_add(request):
     
     if request.method == 'POST':
@@ -135,6 +148,7 @@ def groupe_add(request):
         "etablissements": Etablissement.objects.all()
     })
 
+# Méthode d'édition d'un groupe 
 def groupe_edit(request, groupe_id):
     groupe = Groupe.objects.get(pk = groupe_id)
 
@@ -148,6 +162,7 @@ def groupe_edit(request, groupe_id):
 
     return render(request, "user/groupe_edit.html", {"form": form, "etablissements": Etablissement.objects.all()})
 
+# Méthode de suppression d'un groupe 
 def groupe_remove(request, groupe_id):
     groupe = Groupe.objects.get(pk = groupe_id)
     groupe.delete()
