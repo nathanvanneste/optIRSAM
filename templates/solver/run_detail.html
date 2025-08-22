@@ -13,8 +13,8 @@
         <!-- Affichage des paramètres de la résolution => apporte de la visibilité sur la lecture de l'historique -->
           <p><strong>Groupe:</strong> {{ run.groupe.nom }}</p>
           <p><strong>Etablissement:</strong> {{ run.etablissement }}</p>
-          <p><strong>Paramètre de coût:</strong> {{ run.calculation_mod }}</p>
-          <p><strong>Types de trajets:</strong> {{ run.mode }}</p>
+          <p><strong>Paramètre de coût:</strong>{% if run.calculation_mod == "DISTANCE" %} Distance{% else %} Durée{% endif %}</p>
+          <p><strong>Types de trajets:</strong>{% if run.mode == "NO_START" %} Vers {{ run.etablissement }}{% elif run.mode == "NO_END" %} Depuis {{ run.etablissement }}{% else %} Depuis et vers {{ run.etablissement }}{% endif %}</p>
           <p><strong>Date de création :</strong> {{ run.created_at }}</p>
           <p>Une solution a été trouvée. Voici le résultat proposé:</p>
           <details>

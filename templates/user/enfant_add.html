@@ -87,7 +87,6 @@ function geocoderAdresse() {
       if (data?.length) {
         document.getElementById("id_latitude").value = data[0].lat;
         document.getElementById("id_longitude").value = data[0].lon;
-        alert("Coordonnées trouvées avec succès !");
       } else { 
         alert("Coordonnées non trouvées."); 
       }

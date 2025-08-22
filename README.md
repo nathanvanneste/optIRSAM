@@ -39,3 +39,5 @@ Une fois installée, vous pouvez simplement faire tourner l'application en local
 
 
 Pour permettre au plus grand nombre de profiter de l'application, il est envisageable de la déployer sur un serveur de production en suivant le guide notifié ici [How to deploy Django | Django documentation | Django](https://docs.djangoproject.com/en/5.2/howto/deployment/).
+
+Aussi voici une vidéo de tuto sur l'utilisation du logiciel https://lakaz-my.sharepoint.com/:v:/g/personal/navanneste_irsam_fr/ERfzcFfXOgNEnY1gF7Lzhe8Bbci-t2K00Lf5v8OME0gz7Q?e=sVoxIJ&nav=eyJwbGF5YmFja09wdGlvbnMiOnt9LCJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbE1vZGUiOiJtaXMiLCJyZWZlcnJhbFZpZXciOiJwb3N0cm9sbC1jb3B5bGluayIsInJlZmVycmFsUGxheWJhY2tTZXNzaW9uSWQiOiI5YTVmYmUxZC1jZDg3LTQ5YjEtOTRmOS0xNDMyNDJmNjM0YTgifX0%3D
