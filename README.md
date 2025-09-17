@@ -1,5 +1,5 @@
 # optIRSAM
-Développée lors d'un stage de 2 mois au siège de l'assocation IRSAM (Institut National des Sourds et des Aveugles de Marseille), optIRSAM est une application web permettant d'optimiser les tournées de transports des usagers. Cette dernière a été developpée en python en utilisant le framework Django. Voici donc ici une v1 qui sera sans doute amené à évoluer (pour d'autres stagiaires peut être ?).
+Développée lors d'un stage de 2 mois au siège de l'assocation IRSAM (Institut National des Sourds et des Aveugles de Marseille), optIRSAM est une application web permettant d'optimiser les tournées de transports des usagers. Cette dernière a été developpée en python en utilisant le framework Django. Voici donc ici une v1 qui sera sans doute amenée à évoluer (pour d'autres stagiaires peut être ?).
 
 ## Prérequis
 Avoir git et pyhton d'installés sur sa machine (au minimum la version trois pour python).
